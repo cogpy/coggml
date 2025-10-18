@@ -168,10 +168,6 @@ bool test_cogserver() {
     }
     
     // Test agent addition
-    int agent_calls = 0;
-    auto test_agent = [](struct ggml_opencog_atomspace*) {
-        // Agent function placeholder 
-    };
     
     struct ggml_opencog_mind_agent agent;
     strcpy(agent.name, "TestAgent");

@@ -139,7 +139,7 @@ int main() {
     // Create a more complex taxonomy
     struct ggml_opencog_truth_value tv_certain = {0.95f, 0.9f};
     struct ggml_opencog_truth_value tv_likely = {0.8f, 0.7f};
-    // struct ggml_opencog_truth_value tv_possible = {0.6f, 0.5f}; // Unused for now
+
     
     // Animals
     uint64_t animal_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Animal", tv_certain, {});
