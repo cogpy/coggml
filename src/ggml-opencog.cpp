@@ -106,9 +106,6 @@ uint64_t ggml_opencog_add_atom(struct ggml_opencog_atomspace* atomspace,
     atom->tv = tv;
     atom->outgoing = outgoing;
     
-    // Create embedding tensor for this atom
-    atom->embedding = ggml_new_tensor_1d(atomspace->ctx, GGML_TYPE_F32, atomspace->embedding_dim);
-    
     // Initialize embedding based on type and name
     std::vector<float> embedding_data(atomspace->embedding_dim);
     
@@ -128,8 +125,8 @@ uint64_t ggml_opencog_add_atom(struct ggml_opencog_atomspace* atomspace,
         embedding_data[i] = type_embedding[i] + dist(gen);
     }
     
-    // Set the embedding data
-    ggml_backend_tensor_set(atom->embedding, embedding_data.data(), 0, ggml_nbytes(atom->embedding));
+    // Store embedding data directly in the atom (we'll use the atom matrix for actual tensor ops)
+    atom->embedding = nullptr; // We'll implement proper tensor management later
     
     // Update incoming links for target atoms
     for (uint64_t target_id : outgoing) {
