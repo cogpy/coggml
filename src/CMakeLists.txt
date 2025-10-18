@@ -217,7 +217,8 @@ if (GGML_BACKEND_DL)
 endif()
 
 add_library(ggml
-            ggml-backend-reg.cpp)
+            ggml-backend-reg.cpp
+            ggml-opencog.cpp)
 add_library(ggml::ggml ALIAS ggml)
 
 if (GGML_BACKEND_DIR)
