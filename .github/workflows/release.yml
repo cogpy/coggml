@@ -1,27 +1,305 @@
+# GGML Release Build Workflow
+# Creates release artifacts for all platforms
 name: Release
 
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+env:
+  BUILD_TYPE: Release
 
 jobs:
-  release:
+  # ============================================
+  # Version Preparation
+  # ============================================
+  prepare:
+    name: Prepare Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+  # ============================================
+  # Linux Release (x64)
+  # ============================================
+  linux-x64-release:
+    name: Linux x64 Release
+    runs-on: ubuntu-22.04
+    needs: prepare
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build libcurl4-openssl-dev
+
+      - name: Configure and Build
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DGGML_BUILD_TESTS=ON
+          cmake --build build -j $(nproc)
+
+      - name: Run tests
+        working-directory: build
+        run: ctest --output-on-failure --timeout 120
+
+      - name: Create package
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          mkdir -p release/ggml-${VERSION}-linux-x64/{lib,include,bin}
+          
+          # Copy libraries
+          cp build/src/libggml*.so* release/ggml-${VERSION}-linux-x64/lib/ 2>/dev/null || true
+          cp build/src/libggml*.a release/ggml-${VERSION}-linux-x64/lib/ 2>/dev/null || true
+          
+          # Copy headers
+          cp -r include/ggml* release/ggml-${VERSION}-linux-x64/include/
+          
+          # Copy binaries
+          cp build/bin/* release/ggml-${VERSION}-linux-x64/bin/ 2>/dev/null || true
+          
+          # Copy documentation
+          cp README.md LICENSE release/ggml-${VERSION}-linux-x64/
+          
+          cd release
+          tar -czvf ggml-${VERSION}-linux-x64.tar.gz ggml-${VERSION}-linux-x64
+          sha256sum ggml-${VERSION}-linux-x64.tar.gz > ggml-${VERSION}-linux-x64.tar.gz.sha256
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ggml-linux-x64-release
+          path: |
+            release/*.tar.gz
+            release/*.sha256
+          retention-days: 30
+
+  # ============================================
+  # Linux Release (ARM64)
+  # ============================================
+  linux-arm64-release:
+    name: Linux ARM64 Release
+    runs-on: ubuntu-22.04-arm
+    needs: prepare
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build libcurl4-openssl-dev
+
+      - name: Configure and Build
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DGGML_BUILD_TESTS=ON
+          cmake --build build -j $(nproc)
+
+      - name: Run tests
+        working-directory: build
+        run: ctest --output-on-failure --timeout 120
+
+      - name: Create package
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          mkdir -p release/ggml-${VERSION}-linux-arm64/{lib,include,bin}
+          
+          cp build/src/libggml*.so* release/ggml-${VERSION}-linux-arm64/lib/ 2>/dev/null || true
+          cp build/src/libggml*.a release/ggml-${VERSION}-linux-arm64/lib/ 2>/dev/null || true
+          cp -r include/ggml* release/ggml-${VERSION}-linux-arm64/include/
+          cp build/bin/* release/ggml-${VERSION}-linux-arm64/bin/ 2>/dev/null || true
+          cp README.md LICENSE release/ggml-${VERSION}-linux-arm64/
+          
+          cd release
+          tar -czvf ggml-${VERSION}-linux-arm64.tar.gz ggml-${VERSION}-linux-arm64
+          sha256sum ggml-${VERSION}-linux-arm64.tar.gz > ggml-${VERSION}-linux-arm64.tar.gz.sha256
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ggml-linux-arm64-release
+          path: |
+            release/*.tar.gz
+            release/*.sha256
+          retention-days: 30
+
+  # ============================================
+  # Windows Release
+  # ============================================
+  windows-release:
+    name: Windows Release
+    runs-on: windows-latest
+    needs: prepare
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure and Build
+        run: |
+          cmake -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DGGML_BUILD_TESTS=ON
+          cmake --build build --config Release -j $env:NUMBER_OF_PROCESSORS
+
+      - name: Run tests
+        working-directory: build
+        run: ctest --build-config Release --output-on-failure --timeout 120
+
+      - name: Create package
+        shell: powershell
+        run: |
+          $VERSION = "${{ needs.prepare.outputs.version }}"
+          New-Item -ItemType Directory -Force -Path "release/ggml-${VERSION}-windows-x64/lib"
+          New-Item -ItemType Directory -Force -Path "release/ggml-${VERSION}-windows-x64/include"
+          New-Item -ItemType Directory -Force -Path "release/ggml-${VERSION}-windows-x64/bin"
+          
+          Copy-Item build/src/Release/*.lib "release/ggml-${VERSION}-windows-x64/lib/" -ErrorAction SilentlyContinue
+          Copy-Item build/src/Release/*.dll "release/ggml-${VERSION}-windows-x64/bin/" -ErrorAction SilentlyContinue
+          Copy-Item build/bin/Release/*.exe "release/ggml-${VERSION}-windows-x64/bin/" -ErrorAction SilentlyContinue
+          Copy-Item -Recurse include/ggml* "release/ggml-${VERSION}-windows-x64/include/"
+          Copy-Item README.md,LICENSE "release/ggml-${VERSION}-windows-x64/"
+          
+          Compress-Archive -Path "release/ggml-${VERSION}-windows-x64" -DestinationPath "release/ggml-${VERSION}-windows-x64.zip"
+          Get-FileHash "release/ggml-${VERSION}-windows-x64.zip" -Algorithm SHA256 | Format-List > "release/ggml-${VERSION}-windows-x64.zip.sha256"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ggml-windows-release
+          path: |
+            release/*.zip
+            release/*.sha256
+          retention-days: 30
+
+  # ============================================
+  # macOS Release
+  # ============================================
+  macos-release:
+    name: macOS Release (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-13
+            arch: x64
+          - runner: macos-14
+            arch: arm64
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Create Release
-      id: create_release
-      uses: ggml-org/action-create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref }}
+      - name: Install dependencies
+        run: brew install cmake ninja
+
+      - name: Configure and Build
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DGGML_BUILD_TESTS=ON \
+            -DGGML_METAL=ON
+          cmake --build build -j $(sysctl -n hw.ncpu)
+
+      - name: Run tests
+        working-directory: build
+        run: ctest --output-on-failure --timeout 120
+
+      - name: Create package
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          mkdir -p release/ggml-${VERSION}-macos-${{ matrix.arch }}/{lib,include,bin}
+          
+          cp build/src/libggml*.dylib release/ggml-${VERSION}-macos-${{ matrix.arch }}/lib/ 2>/dev/null || true
+          cp build/src/libggml*.a release/ggml-${VERSION}-macos-${{ matrix.arch }}/lib/ 2>/dev/null || true
+          cp -r include/ggml* release/ggml-${VERSION}-macos-${{ matrix.arch }}/include/
+          cp build/bin/* release/ggml-${VERSION}-macos-${{ matrix.arch }}/bin/ 2>/dev/null || true
+          cp README.md LICENSE release/ggml-${VERSION}-macos-${{ matrix.arch }}/
+          
+          cd release
+          tar -czvf ggml-${VERSION}-macos-${{ matrix.arch }}.tar.gz ggml-${VERSION}-macos-${{ matrix.arch }}
+          shasum -a 256 ggml-${VERSION}-macos-${{ matrix.arch }}.tar.gz > ggml-${VERSION}-macos-${{ matrix.arch }}.tar.gz.sha256
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ggml-macos-${{ matrix.arch }}-release
+          path: |
+            release/*.tar.gz
+            release/*.sha256
+          retention-days: 30
+
+  # ============================================
+  # Create GitHub Release
+  # ============================================
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [prepare, linux-x64-release, linux-arm64-release, windows-release, macos-release]
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: GGML v${{ needs.prepare.outputs.version }}
+          body: |
+            ## GGML Release v${{ needs.prepare.outputs.version }}
+            
+            GGML is a tensor library for machine learning.
+            
+            ### Downloads
+            - **Linux x64**: `ggml-${{ needs.prepare.outputs.version }}-linux-x64.tar.gz`
+            - **Linux ARM64**: `ggml-${{ needs.prepare.outputs.version }}-linux-arm64.tar.gz`
+            - **Windows x64**: `ggml-${{ needs.prepare.outputs.version }}-windows-x64.zip`
+            - **macOS x64**: `ggml-${{ needs.prepare.outputs.version }}-macos-x64.tar.gz`
+            - **macOS ARM64**: `ggml-${{ needs.prepare.outputs.version }}-macos-arm64.tar.gz`
+            
+            ### Features
+            - Optimized tensor operations
+            - Multiple backend support (CPU, Metal, CUDA, Vulkan)
+            - Quantization support
+          files: |
+            release/**/*.tar.gz
+            release/**/*.zip
+            release/**/*.sha256
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(needs.prepare.outputs.version, '-') }}
