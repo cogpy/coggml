@@ -1,0 +1,1 @@
+/home/runner/work/coggml/.codeql-scratch/dbs/cpp/working/autobuild/bin/c++ -fPIC -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/ggml.dir/link.d -shared -Wl,-soname,libggml.so -o libggml.so "CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o" "CMakeFiles/ggml.dir/ggml-opencog.cpp.o"  -Wl,-rpath,/home/runner/work/coggml/coggml/_codeql_build_dir/src: -ldl libggml-cpu.so libggml-base.so

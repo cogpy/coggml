@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <cstring>
 
 bool test_atomspace_creation() {
     std::cout << "Testing AtomSpace creation... ";
@@ -151,6 +152,30 @@ bool test_reasoning() {
         return false;
     }
     
+    // Test abduction
+    auto abduced = ggml_opencog_pln_abduction(tv1, tv2);
+    if (abduced.strength < 0.0f || abduced.strength > 1.0f ||
+        abduced.confidence < 0.0f || abduced.confidence > 1.0f) {
+        std::cout << "FAILED (abduction bounds)\n";
+        return false;
+    }
+    
+    // Test revision
+    auto revised = ggml_opencog_pln_revision(tv1, tv2);
+    if (revised.strength < 0.0f || revised.strength > 1.0f ||
+        revised.confidence < 0.0f || revised.confidence > 1.0f) {
+        std::cout << "FAILED (revision bounds)\n";
+        return false;
+    }
+    
+    // Test modus ponens
+    auto consequent = ggml_opencog_pln_modus_ponens(tv1, tv2);
+    if (consequent.strength < 0.0f || consequent.strength > 1.0f ||
+        consequent.confidence < 0.0f || consequent.confidence > 1.0f) {
+        std::cout << "FAILED (modus ponens bounds)\n";
+        return false;
+    }
+    
     std::cout << "PASSED\n";
     return true;
 }
@@ -188,11 +213,121 @@ bool test_cogserver() {
     return true;
 }
 
+bool test_embeddings() {
+    std::cout << "Testing embeddings... ";
+    
+    auto* atomspace = ggml_opencog_atomspace_new(64);
+    struct ggml_opencog_truth_value tv = {0.8f, 0.6f};
+    
+    uint64_t id1 = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Cat", tv, {});
+    uint64_t id2 = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Dog", tv, {});
+    
+    auto* atom1 = ggml_opencog_get_atom(atomspace, id1);
+    auto* atom2 = ggml_opencog_get_atom(atomspace, id2);
+    
+    // Check that embeddings were created
+    if (!atom1 || !atom2 || 
+        atom1->embedding_data.empty() || atom2->embedding_data.empty()) {
+        std::cout << "FAILED (embedding creation)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Check embedding dimensions
+    if (atom1->embedding_data.size() != 64 || atom2->embedding_data.size() != 64) {
+        std::cout << "FAILED (embedding dimensions)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_similarity() {
+    std::cout << "Testing similarity computation... ";
+    
+    auto* atomspace = ggml_opencog_atomspace_new(64);
+    struct ggml_opencog_truth_value tv = {0.8f, 0.6f};
+    
+    uint64_t mammal_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Mammal", tv, {});
+    uint64_t dog_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Dog", tv, {});
+    uint64_t cat_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Cat", tv, {});
+    
+    // Create links to establish relationships
+    ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK, 
+                         "Dog->Mammal", tv, {dog_id, mammal_id});
+    ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK, 
+                         "Cat->Mammal", tv, {cat_id, mammal_id});
+    
+    // Compute similarity
+    float sim = ggml_opencog_compute_similarity(atomspace, dog_id, cat_id);
+    
+    // Similarity should be in valid range
+    if (sim < -1.0f || sim > 1.0f) {
+        std::cout << "FAILED (similarity bounds)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Self-similarity should be 1.0
+    float self_sim = ggml_opencog_compute_similarity(atomspace, dog_id, dog_id);
+    if (fabsf(self_sim - 1.0f) > 0.01f) {
+        std::cout << "FAILED (self similarity)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_attention() {
+    std::cout << "Testing attention allocation (ECAN)... ";
+    
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    struct ggml_opencog_truth_value tv = {0.8f, 0.6f};
+    
+    uint64_t id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "TestConcept", tv, {});
+    auto* atom = ggml_opencog_get_atom(atomspace, id);
+    
+    // Initial attention should be zero
+    if (atom->sti != 0.0f || atom->lti != 0.0f || atom->vlti != 0.0f) {
+        std::cout << "FAILED (initial attention)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Update attention
+    ggml_opencog_update_attention(atomspace, id, 10.0f, 5.0f);
+    
+    // Check attention was updated
+    if (fabsf(atom->sti - 10.0f) > 1e-6f || fabsf(atom->lti - 5.0f) > 1e-6f) {
+        std::cout << "FAILED (attention update)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test clamping - STI should be clamped to [-100, 100]
+    ggml_opencog_update_attention(atomspace, id, 200.0f, 0.0f);
+    if (atom->sti > 100.0f) {
+        std::cout << "FAILED (STI clamping)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
 int main() {
     std::cout << "=== OpenCog GGML Tests ===\n\n";
     
     int passed = 0;
-    int total = 6;
+    int total = 9;
     
     if (test_atomspace_creation()) passed++;
     if (test_atom_creation()) passed++;
@@ -200,6 +335,9 @@ int main() {
     if (test_links()) passed++;
     if (test_reasoning()) passed++;
     if (test_cogserver()) passed++;
+    if (test_embeddings()) passed++;
+    if (test_similarity()) passed++;
+    if (test_attention()) passed++;
     
     std::cout << "\n=== Results ===\n";
     std::cout << "Passed: " << passed << "/" << total << " tests\n";

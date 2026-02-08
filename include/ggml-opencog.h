@@ -33,9 +33,15 @@ struct ggml_opencog_atom {
     enum ggml_opencog_atom_type type;          // Type of atom
     char name[256];                            // Name/label for the atom
     struct ggml_opencog_truth_value tv;       // Truth value
-    struct ggml_tensor* embedding;             // Vector embedding of the atom
+    struct ggml_tensor* embedding;             // Vector embedding of the atom (can be nullptr)
+    std::vector<float> embedding_data;         // Direct storage of embedding data
     std::vector<uint64_t> outgoing;            // IDs of atoms this links to
     std::vector<uint64_t> incoming;            // IDs of atoms that link to this
+    
+    // ECAN (Economic Attention Network) values
+    float sti;                                 // Short-term importance (attention)
+    float lti;                                 // Long-term importance (memory worthiness)
+    float vlti;                                // Very long-term importance
 };
 
 // AtomSpace - the core knowledge representation
@@ -99,6 +105,26 @@ struct ggml_opencog_truth_value ggml_opencog_pln_deduction(struct ggml_opencog_t
 
 struct ggml_opencog_truth_value ggml_opencog_pln_induction(struct ggml_opencog_truth_value premise1,
                                                           struct ggml_opencog_truth_value premise2);
+
+struct ggml_opencog_truth_value ggml_opencog_pln_abduction(struct ggml_opencog_truth_value premise1,
+                                                          struct ggml_opencog_truth_value premise2);
+
+struct ggml_opencog_truth_value ggml_opencog_pln_revision(struct ggml_opencog_truth_value tv1,
+                                                         struct ggml_opencog_truth_value tv2);
+
+struct ggml_opencog_truth_value ggml_opencog_pln_modus_ponens(struct ggml_opencog_truth_value implication,
+                                                              struct ggml_opencog_truth_value antecedent);
+
+// Similarity computation using embeddings
+float ggml_opencog_compute_similarity(struct ggml_opencog_atomspace* atomspace,
+                                     uint64_t atom1_id,
+                                     uint64_t atom2_id);
+
+// Attention allocation (ECAN)
+void ggml_opencog_update_attention(struct ggml_opencog_atomspace* atomspace,
+                                  uint64_t atom_id,
+                                  float sti_delta,
+                                  float lti_delta);
 
 // CogServer functions
 struct ggml_opencog_cogserver* ggml_opencog_cogserver_new(struct ggml_opencog_atomspace* atomspace);
