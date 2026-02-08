@@ -106,6 +106,11 @@ uint64_t ggml_opencog_add_atom(struct ggml_opencog_atomspace* atomspace,
     atom->tv = tv;
     atom->outgoing = outgoing;
     
+    // Initialize ECAN attention values
+    atom->sti = 0.0f;    // Neutral attention initially
+    atom->lti = 0.0f;    // No long-term importance yet
+    atom->vlti = 0.0f;   // No very long-term importance yet
+    
     // Initialize embedding based on type and name
     std::vector<float> embedding_data(atomspace->embedding_dim);
     
@@ -115,7 +120,7 @@ uint64_t ggml_opencog_add_atom(struct ggml_opencog_atomspace* atomspace,
                            type * atomspace->embedding_dim * sizeof(float), 
                            atomspace->embedding_dim * sizeof(float));
     
-    // Simple hash-based initialization for name
+    // Hash-based initialization for name
     std::hash<std::string> hasher;
     size_t name_hash = hasher(name);
     std::mt19937 gen(name_hash);
@@ -125,8 +130,30 @@ uint64_t ggml_opencog_add_atom(struct ggml_opencog_atomspace* atomspace,
         embedding_data[i] = type_embedding[i] + dist(gen);
     }
     
-    // Store embedding data directly in the atom (we'll use the atom matrix for actual tensor ops)
-    atom->embedding = nullptr; // We'll implement proper tensor management later
+    // For links, incorporate embeddings of connected atoms
+    if (!outgoing.empty()) {
+        std::vector<float> combined_embedding(atomspace->embedding_dim, 0.0f);
+        for (uint64_t target_id : outgoing) {
+            auto target_it = atomspace->atoms.find(target_id);
+            if (target_it != atomspace->atoms.end() && !target_it->second->embedding_data.empty()) {
+                const auto& target_emb = target_it->second->embedding_data;
+                for (int i = 0; i < atomspace->embedding_dim; i++) {
+                    combined_embedding[i] += target_emb[i];
+                }
+            }
+        }
+        
+        // Average and blend with type embedding
+        float blend_factor = 0.7f;
+        for (int i = 0; i < atomspace->embedding_dim; i++) {
+            embedding_data[i] = blend_factor * embedding_data[i] + 
+                              (1.0f - blend_factor) * combined_embedding[i] / outgoing.size();
+        }
+    }
+    
+    // Store embedding data directly in the atom
+    atom->embedding_data = embedding_data;
+    atom->embedding = nullptr;  // For now, tensor is not used directly
     
     // Update incoming links for target atoms
     for (uint64_t target_id : outgoing) {
@@ -199,39 +226,64 @@ std::vector<uint64_t> ggml_opencog_get_atoms_by_type(struct ggml_opencog_atomspa
     return (it != atomspace->type_index.end()) ? it->second : std::vector<uint64_t>();
 }
 
-// Simple pattern matching based on embedding similarity
+// Pattern matching based on embedding similarity using cosine similarity
 std::vector<uint64_t> ggml_opencog_pattern_match(struct ggml_opencog_atomspace* atomspace,
                                                   const struct ggml_tensor* pattern) {
-    std::vector<uint64_t> matches;
+    std::vector<std::pair<uint64_t, float>> matches_with_scores;
     
     // Get pattern data
-    std::vector<float> pattern_data(ggml_nelements(pattern));
-    ggml_backend_tensor_get(pattern, pattern_data.data(), 0, ggml_nbytes(pattern));
+    int pattern_dim = ggml_nelements(pattern);
+    if (pattern_dim != atomspace->embedding_dim) {
+        // Pattern dimension doesn't match atomspace embedding dimension
+        return std::vector<uint64_t>();
+    }
     
-    const float similarity_threshold = 0.8f;
+    std::vector<float> pattern_data(pattern_dim);
+    if (pattern->data) {
+        memcpy(pattern_data.data(), pattern->data, pattern_dim * sizeof(float));
+    } else {
+        ggml_backend_tensor_get(pattern, pattern_data.data(), 0, ggml_nbytes(pattern));
+    }
     
-    // Compare against all atoms
+    const float similarity_threshold = 0.7f;
+    
+    // Compare against all atoms using cosine similarity
     for (const auto& [id, atom] : atomspace->atoms) {
-        // For now, use a simple name-based similarity as embedding tensor management is disabled
-        // In a full implementation, this would use actual tensor embeddings
-        std::string atom_name = atom->name;
-        float similarity = 0.5f; // Placeholder similarity
+        if (atom->embedding_data.empty()) {
+            continue;
+        }
+        
+        // Calculate cosine similarity using the embedding data
+        float similarity = cosine_similarity(pattern_data.data(), atom->embedding_data.data(), 
+                                            atomspace->embedding_dim);
         
         if (similarity >= similarity_threshold) {
-            matches.push_back(id);
+            matches_with_scores.push_back({id, similarity});
         }
     }
     
-    // Sort by similarity (would need to store similarities for this)
+    // Sort by similarity (descending order)
+    std::sort(matches_with_scores.begin(), matches_with_scores.end(),
+              [](const auto& a, const auto& b) { return a.second > b.second; });
+    
+    // Extract just the IDs
+    std::vector<uint64_t> matches;
+    matches.reserve(matches_with_scores.size());
+    for (const auto& [id, score] : matches_with_scores) {
+        matches.push_back(id);
+    }
+    
     return matches;
 }
 
 // PLN (Probabilistic Logic Networks) reasoning functions
+
+// Deduction: A->B and B->C implies A->C
 struct ggml_opencog_truth_value ggml_opencog_pln_deduction(struct ggml_opencog_truth_value premise1,
                                                            struct ggml_opencog_truth_value premise2) {
-    // Basic deduction: if A->B and B->C then A->C
-    // Strength: s1 * s2
-    // Confidence: min(c1, c2) * s1 * s2
+    // Advanced deduction using PLN formulas
+    // Strength: s_AB * s_BC
+    // Confidence: c_AB * c_BC * s_AB * s_BC
     
     struct ggml_opencog_truth_value result;
     result.strength = premise1.strength * premise2.strength;
@@ -240,16 +292,99 @@ struct ggml_opencog_truth_value ggml_opencog_pln_deduction(struct ggml_opencog_t
     return result;
 }
 
+// Induction: A->B and A->C suggests B->C
 struct ggml_opencog_truth_value ggml_opencog_pln_induction(struct ggml_opencog_truth_value premise1,
                                                           struct ggml_opencog_truth_value premise2) {
-    // Basic induction: if A->B and A->C, infer B->C
-    // This is a simplified version
+    // Induction is weaker than deduction
+    // Simplified formula
     
     struct ggml_opencog_truth_value result;
     result.strength = (premise1.strength + premise2.strength) / 2.0f;
-    result.confidence = fminf(premise1.confidence, premise2.confidence) * 0.5f; // Less confident than deduction
+    result.confidence = fminf(premise1.confidence, premise2.confidence) * 0.5f;
     
     return result;
+}
+
+// Abduction: A->C and B->C suggests A->B
+struct ggml_opencog_truth_value ggml_opencog_pln_abduction(struct ggml_opencog_truth_value premise1,
+                                                          struct ggml_opencog_truth_value premise2) {
+    // Abduction is similar to induction but works backward
+    struct ggml_opencog_truth_value result;
+    result.strength = (premise1.strength * premise2.strength + 
+                      (1.0f - premise1.strength) * (1.0f - premise2.strength)) / 2.0f;
+    result.confidence = fminf(premise1.confidence, premise2.confidence) * 0.4f; // Even weaker than induction
+    
+    return result;
+}
+
+// Revision: Combine two truth values for the same proposition
+struct ggml_opencog_truth_value ggml_opencog_pln_revision(struct ggml_opencog_truth_value tv1,
+                                                         struct ggml_opencog_truth_value tv2) {
+    // Weighted average based on confidence
+    float total_confidence = tv1.confidence + tv2.confidence;
+    
+    struct ggml_opencog_truth_value result;
+    if (total_confidence > 0.0f) {
+        result.strength = (tv1.strength * tv1.confidence + tv2.strength * tv2.confidence) / total_confidence;
+        result.confidence = fminf(1.0f, total_confidence); // Can't exceed 1.0
+    } else {
+        result.strength = 0.5f;
+        result.confidence = 0.0f;
+    }
+    
+    return result;
+}
+
+// Modus Ponens: A->B and A implies B
+struct ggml_opencog_truth_value ggml_opencog_pln_modus_ponens(struct ggml_opencog_truth_value implication,
+                                                              struct ggml_opencog_truth_value antecedent) {
+    struct ggml_opencog_truth_value result;
+    result.strength = implication.strength * antecedent.strength;
+    result.confidence = implication.confidence * antecedent.confidence;
+    
+    return result;
+}
+
+// Compute similarity between two atoms using their embeddings
+float ggml_opencog_compute_similarity(struct ggml_opencog_atomspace* atomspace,
+                                     uint64_t atom1_id,
+                                     uint64_t atom2_id) {
+    auto* atom1 = ggml_opencog_get_atom(atomspace, atom1_id);
+    auto* atom2 = ggml_opencog_get_atom(atomspace, atom2_id);
+    
+    if (!atom1 || !atom2 || atom1->embedding_data.empty() || atom2->embedding_data.empty()) {
+        return 0.0f;
+    }
+    
+    return cosine_similarity(atom1->embedding_data.data(), atom2->embedding_data.data(), 
+                           atomspace->embedding_dim);
+}
+
+// ECAN: Update attention values for an atom
+void ggml_opencog_update_attention(struct ggml_opencog_atomspace* atomspace,
+                                  uint64_t atom_id,
+                                  float sti_delta,
+                                  float lti_delta) {
+    auto* atom = ggml_opencog_get_atom(atomspace, atom_id);
+    if (!atom) return;
+    
+    // Update short-term importance (clamped to reasonable range)
+    atom->sti += sti_delta;
+    atom->sti = fmaxf(-100.0f, fminf(100.0f, atom->sti));
+    
+    // Update long-term importance (typically only increases)
+    atom->lti += lti_delta;
+    atom->lti = fmaxf(0.0f, fminf(100.0f, atom->lti));
+    
+    // Attention spreading: increase STI of connected atoms slightly
+    const float spread_factor = 0.1f;
+    for (uint64_t target_id : atom->outgoing) {
+        auto* target = ggml_opencog_get_atom(atomspace, target_id);
+        if (target) {
+            target->sti += sti_delta * spread_factor;
+            target->sti = fmaxf(-100.0f, fminf(100.0f, target->sti));
+        }
+    }
 }
 
 // CogServer implementation
