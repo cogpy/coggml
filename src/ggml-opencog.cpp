@@ -151,9 +151,15 @@ uint64_t ggml_opencog_add_atom(struct ggml_opencog_atomspace* atomspace,
         }
     }
     
-    // Store embedding data directly in the atom
+    // Store embedding data directly in the atom for efficient access.
+    // We use std::vector<float> rather than ggml_tensor* to avoid
+    // the complexity of managing individual tensor contexts and buffers
+    // for potentially thousands of atoms. This approach:
+    // - Simplifies memory management (no buffer allocation per atom)
+    // - Provides faster access for similarity computations
+    // - Allows batch operations when needed via atom_matrix tensor
     atom->embedding_data = embedding_data;
-    atom->embedding = nullptr;  // For now, tensor is not used directly
+    atom->embedding = nullptr;  // Tensor field reserved for future batch ops
     
     // Update incoming links for target atoms
     for (uint64_t target_id : outgoing) {
@@ -239,6 +245,9 @@ std::vector<uint64_t> ggml_opencog_pattern_match(struct ggml_opencog_atomspace* 
     }
     
     std::vector<float> pattern_data(pattern_dim);
+    // For patterns created with ggml_new_tensor_*d with immediate data,
+    // pattern->data will be non-null. For patterns from backend tensors,
+    // we need to use ggml_backend_tensor_get.
     if (pattern->data) {
         memcpy(pattern_data.data(), pattern->data, pattern_dim * sizeof(float));
     } else {
