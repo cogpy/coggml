@@ -573,8 +573,8 @@ bool ggml_opencog_happens_simultaneously(struct ggml_opencog_atomspace* atomspac
     if (!atom1 || !atom2) return false;
     if (!atom1->time_interval || !atom2->time_interval) return false;
     
-    int64_t start_diff = llabs(atom1->time_interval->start_time - atom2->time_interval->start_time);
-    int64_t end_diff = llabs(atom1->time_interval->end_time - atom2->time_interval->end_time);
+    int64_t start_diff = std::abs(atom1->time_interval->start_time - atom2->time_interval->start_time);
+    int64_t end_diff = std::abs(atom1->time_interval->end_time - atom2->time_interval->end_time);
     
     return start_diff <= tolerance_ms && end_diff <= tolerance_ms;
 }

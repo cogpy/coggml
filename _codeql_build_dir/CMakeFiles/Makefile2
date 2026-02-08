@@ -249,12 +249,16 @@ examples/mnist/clean: examples/mnist/CMakeFiles/mnist-train.dir/clean
 examples/opencog/all: examples/opencog/CMakeFiles/opencog-simple.dir/all
 examples/opencog/all: examples/opencog/CMakeFiles/opencog-reasoning.dir/all
 examples/opencog/all: examples/opencog/CMakeFiles/opencog-advanced.dir/all
+examples/opencog/all: examples/opencog/CMakeFiles/opencog-hebbian.dir/all
+examples/opencog/all: examples/opencog/CMakeFiles/opencog-temporal.dir/all
 .PHONY : examples/opencog/all
 
 # Recursive "codegen" directory target.
 examples/opencog/codegen: examples/opencog/CMakeFiles/opencog-simple.dir/codegen
 examples/opencog/codegen: examples/opencog/CMakeFiles/opencog-reasoning.dir/codegen
 examples/opencog/codegen: examples/opencog/CMakeFiles/opencog-advanced.dir/codegen
+examples/opencog/codegen: examples/opencog/CMakeFiles/opencog-hebbian.dir/codegen
+examples/opencog/codegen: examples/opencog/CMakeFiles/opencog-temporal.dir/codegen
 .PHONY : examples/opencog/codegen
 
 # Recursive "preinstall" directory target.
@@ -265,6 +269,8 @@ examples/opencog/preinstall:
 examples/opencog/clean: examples/opencog/CMakeFiles/opencog-simple.dir/clean
 examples/opencog/clean: examples/opencog/CMakeFiles/opencog-reasoning.dir/clean
 examples/opencog/clean: examples/opencog/CMakeFiles/opencog-advanced.dir/clean
+examples/opencog/clean: examples/opencog/CMakeFiles/opencog-hebbian.dir/clean
+examples/opencog/clean: examples/opencog/CMakeFiles/opencog-temporal.dir/clean
 .PHONY : examples/opencog/clean
 
 #=============================================================================
@@ -463,7 +469,7 @@ tests/clean: tests/CMakeFiles/test-interpolate.dir/clean
 src/CMakeFiles/ggml-base.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ggml-base.dir/build.make src/CMakeFiles/ggml-base.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ggml-base.dir/build.make src/CMakeFiles/ggml-base.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=7,8,9,10,11,12,13,14 "Built target ggml-base"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=6,7,8,9,10,11,12,13 "Built target ggml-base"
 .PHONY : src/CMakeFiles/ggml-base.dir/all
 
 # Build rule for subdir invocation for target.
@@ -480,7 +486,7 @@ ggml-base: src/CMakeFiles/ggml-base.dir/rule
 # codegen rule for target.
 src/CMakeFiles/ggml-base.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ggml-base.dir/build.make src/CMakeFiles/ggml-base.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=7,8,9,10,11,12,13,14 "Finished codegen for target ggml-base"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=6,7,8,9,10,11,12,13 "Finished codegen for target ggml-base"
 .PHONY : src/CMakeFiles/ggml-base.dir/codegen
 
 # clean rule for target.
@@ -496,12 +502,12 @@ src/CMakeFiles/ggml.dir/all: src/CMakeFiles/ggml-base.dir/all
 src/CMakeFiles/ggml.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ggml.dir/build.make src/CMakeFiles/ggml.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ggml.dir/build.make src/CMakeFiles/ggml.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=4,5,6 "Built target ggml"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=4,5 "Built target ggml"
 .PHONY : src/CMakeFiles/ggml.dir/all
 
 # Build rule for subdir invocation for target.
 src/CMakeFiles/ggml.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 24
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 23
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/ggml.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : src/CMakeFiles/ggml.dir/rule
@@ -513,7 +519,7 @@ ggml: src/CMakeFiles/ggml.dir/rule
 # codegen rule for target.
 src/CMakeFiles/ggml.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ggml.dir/build.make src/CMakeFiles/ggml.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=4,5,6 "Finished codegen for target ggml"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=4,5 "Finished codegen for target ggml"
 .PHONY : src/CMakeFiles/ggml.dir/codegen
 
 # clean rule for target.
@@ -528,7 +534,7 @@ src/CMakeFiles/ggml.dir/clean:
 src/CMakeFiles/ggml-cpu.dir/all: src/CMakeFiles/ggml-base.dir/all
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ggml-cpu.dir/build.make src/CMakeFiles/ggml-cpu.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ggml-cpu.dir/build.make src/CMakeFiles/ggml-cpu.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=15,16,17,18,19,20,21,22,23,24,25,26,27 "Built target ggml-cpu"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=14,15,16,17,18,19,20,21,22,23,24,25,26 "Built target ggml-cpu"
 .PHONY : src/CMakeFiles/ggml-cpu.dir/all
 
 # Build rule for subdir invocation for target.
@@ -545,7 +551,7 @@ ggml-cpu: src/CMakeFiles/ggml-cpu.dir/rule
 # codegen rule for target.
 src/CMakeFiles/ggml-cpu.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/ggml-cpu.dir/build.make src/CMakeFiles/ggml-cpu.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=15,16,17,18,19,20,21,22,23,24,25,26,27 "Finished codegen for target ggml-cpu"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=14,15,16,17,18,19,20,21,22,23,24,25,26 "Finished codegen for target ggml-cpu"
 .PHONY : src/CMakeFiles/ggml-cpu.dir/codegen
 
 # clean rule for target.
@@ -562,12 +568,12 @@ tests/CMakeFiles/test-backend-ops.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-backend-ops.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-backend-ops.dir/build.make tests/CMakeFiles/test-backend-ops.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-backend-ops.dir/build.make tests/CMakeFiles/test-backend-ops.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=61,62 "Built target test-backend-ops"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=62,63 "Built target test-backend-ops"
 .PHONY : tests/CMakeFiles/test-backend-ops.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-backend-ops.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-backend-ops.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-backend-ops.dir/rule
@@ -579,7 +585,7 @@ test-backend-ops: tests/CMakeFiles/test-backend-ops.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-backend-ops.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-backend-ops.dir/build.make tests/CMakeFiles/test-backend-ops.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=61,62 "Finished codegen for target test-backend-ops"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=62,63 "Finished codegen for target test-backend-ops"
 .PHONY : tests/CMakeFiles/test-backend-ops.dir/codegen
 
 # clean rule for target.
@@ -596,12 +602,12 @@ tests/CMakeFiles/test-opencog.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-opencog.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-opencog.dir/build.make tests/CMakeFiles/test-opencog.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-opencog.dir/build.make tests/CMakeFiles/test-opencog.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=82,83 "Built target test-opencog"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=83 "Built target test-opencog"
 .PHONY : tests/CMakeFiles/test-opencog.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-opencog.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 24
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-opencog.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-opencog.dir/rule
@@ -613,7 +619,7 @@ test-opencog: tests/CMakeFiles/test-opencog.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-opencog.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-opencog.dir/build.make tests/CMakeFiles/test-opencog.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=82,83 "Finished codegen for target test-opencog"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=83 "Finished codegen for target test-opencog"
 .PHONY : tests/CMakeFiles/test-opencog.dir/codegen
 
 # clean rule for target.
@@ -635,7 +641,7 @@ tests/CMakeFiles/test-opt.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-opt.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-opt.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-opt.dir/rule
@@ -669,7 +675,7 @@ tests/CMakeFiles/test-quantize-fns.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-quantize-fns.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-quantize-fns.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-quantize-fns.dir/rule
@@ -703,7 +709,7 @@ tests/CMakeFiles/test-quantize-perf.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-quantize-perf.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-quantize-perf.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-quantize-perf.dir/rule
@@ -732,12 +738,12 @@ tests/CMakeFiles/test-pool.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-pool.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-pool.dir/build.make tests/CMakeFiles/test-pool.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-pool.dir/build.make tests/CMakeFiles/test-pool.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=87,88 "Built target test-pool"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=88 "Built target test-pool"
 .PHONY : tests/CMakeFiles/test-pool.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-pool.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 24
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-pool.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-pool.dir/rule
@@ -749,7 +755,7 @@ test-pool: tests/CMakeFiles/test-pool.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-pool.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-pool.dir/build.make tests/CMakeFiles/test-pool.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=87,88 "Finished codegen for target test-pool"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=88 "Finished codegen for target test-pool"
 .PHONY : tests/CMakeFiles/test-pool.dir/codegen
 
 # clean rule for target.
@@ -766,12 +772,12 @@ tests/CMakeFiles/test-arange.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-arange.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-arange.dir/build.make tests/CMakeFiles/test-arange.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-arange.dir/build.make tests/CMakeFiles/test-arange.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=59,60 "Built target test-arange"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=61 "Built target test-arange"
 .PHONY : tests/CMakeFiles/test-arange.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-arange.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 24
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-arange.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-arange.dir/rule
@@ -783,7 +789,7 @@ test-arange: tests/CMakeFiles/test-arange.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-arange.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-arange.dir/build.make tests/CMakeFiles/test-arange.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=59,60 "Finished codegen for target test-arange"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=61 "Finished codegen for target test-arange"
 .PHONY : tests/CMakeFiles/test-arange.dir/codegen
 
 # clean rule for target.
@@ -805,7 +811,7 @@ tests/CMakeFiles/test-timestep_embedding.dir/all: src/CMakeFiles/ggml-cpu.dir/al
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-timestep_embedding.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-timestep_embedding.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-timestep_embedding.dir/rule
@@ -834,7 +840,7 @@ tests/CMakeFiles/test-pad-reflect-1d.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-pad-reflect-1d.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-pad-reflect-1d.dir/build.make tests/CMakeFiles/test-pad-reflect-1d.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-pad-reflect-1d.dir/build.make tests/CMakeFiles/test-pad-reflect-1d.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=86 "Built target test-pad-reflect-1d"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=86,87 "Built target test-pad-reflect-1d"
 .PHONY : tests/CMakeFiles/test-pad-reflect-1d.dir/all
 
 # Build rule for subdir invocation for target.
@@ -851,7 +857,7 @@ test-pad-reflect-1d: tests/CMakeFiles/test-pad-reflect-1d.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-pad-reflect-1d.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-pad-reflect-1d.dir/build.make tests/CMakeFiles/test-pad-reflect-1d.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=86 "Finished codegen for target test-pad-reflect-1d"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=86,87 "Finished codegen for target test-pad-reflect-1d"
 .PHONY : tests/CMakeFiles/test-pad-reflect-1d.dir/codegen
 
 # clean rule for target.
@@ -868,12 +874,12 @@ tests/CMakeFiles/test-roll.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-roll.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-roll.dir/build.make tests/CMakeFiles/test-roll.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-roll.dir/build.make tests/CMakeFiles/test-roll.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=94,95 "Built target test-roll"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=95 "Built target test-roll"
 .PHONY : tests/CMakeFiles/test-roll.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-roll.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 24
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-roll.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-roll.dir/rule
@@ -885,7 +891,7 @@ test-roll: tests/CMakeFiles/test-roll.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-roll.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-roll.dir/build.make tests/CMakeFiles/test-roll.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=94,95 "Finished codegen for target test-roll"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=95 "Finished codegen for target test-roll"
 .PHONY : tests/CMakeFiles/test-roll.dir/codegen
 
 # clean rule for target.
@@ -902,12 +908,12 @@ tests/CMakeFiles/test-conv-transpose.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-conv-transpose.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv-transpose.dir/build.make tests/CMakeFiles/test-conv-transpose.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv-transpose.dir/build.make tests/CMakeFiles/test-conv-transpose.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=65 "Built target test-conv-transpose"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=66 "Built target test-conv-transpose"
 .PHONY : tests/CMakeFiles/test-conv-transpose.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-conv-transpose.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 24
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-conv-transpose.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-conv-transpose.dir/rule
@@ -919,7 +925,7 @@ test-conv-transpose: tests/CMakeFiles/test-conv-transpose.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-conv-transpose.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv-transpose.dir/build.make tests/CMakeFiles/test-conv-transpose.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=65 "Finished codegen for target test-conv-transpose"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=66 "Finished codegen for target test-conv-transpose"
 .PHONY : tests/CMakeFiles/test-conv-transpose.dir/codegen
 
 # clean rule for target.
@@ -936,12 +942,12 @@ tests/CMakeFiles/test-conv-transpose-1d.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-conv-transpose-1d.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv-transpose-1d.dir/build.make tests/CMakeFiles/test-conv-transpose-1d.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv-transpose-1d.dir/build.make tests/CMakeFiles/test-conv-transpose-1d.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=66,67 "Built target test-conv-transpose-1d"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=67,68 "Built target test-conv-transpose-1d"
 .PHONY : tests/CMakeFiles/test-conv-transpose-1d.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-conv-transpose-1d.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-conv-transpose-1d.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-conv-transpose-1d.dir/rule
@@ -953,7 +959,7 @@ test-conv-transpose-1d: tests/CMakeFiles/test-conv-transpose-1d.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-conv-transpose-1d.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv-transpose-1d.dir/build.make tests/CMakeFiles/test-conv-transpose-1d.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=66,67 "Finished codegen for target test-conv-transpose-1d"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=67,68 "Finished codegen for target test-conv-transpose-1d"
 .PHONY : tests/CMakeFiles/test-conv-transpose-1d.dir/codegen
 
 # clean rule for target.
@@ -970,7 +976,7 @@ tests/CMakeFiles/test-dup.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-dup.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-dup.dir/build.make tests/CMakeFiles/test-dup.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-dup.dir/build.make tests/CMakeFiles/test-dup.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=79 "Built target test-dup"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=79,80 "Built target test-dup"
 .PHONY : tests/CMakeFiles/test-dup.dir/all
 
 # Build rule for subdir invocation for target.
@@ -987,7 +993,7 @@ test-dup: tests/CMakeFiles/test-dup.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-dup.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-dup.dir/build.make tests/CMakeFiles/test-dup.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=79 "Finished codegen for target test-dup"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=79,80 "Finished codegen for target test-dup"
 .PHONY : tests/CMakeFiles/test-dup.dir/codegen
 
 # clean rule for target.
@@ -1004,7 +1010,7 @@ tests/CMakeFiles/test-rel-pos.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-rel-pos.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-rel-pos.dir/build.make tests/CMakeFiles/test-rel-pos.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-rel-pos.dir/build.make tests/CMakeFiles/test-rel-pos.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=93 "Built target test-rel-pos"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=93,94 "Built target test-rel-pos"
 .PHONY : tests/CMakeFiles/test-rel-pos.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1021,7 +1027,7 @@ test-rel-pos: tests/CMakeFiles/test-rel-pos.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-rel-pos.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-rel-pos.dir/build.make tests/CMakeFiles/test-rel-pos.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=93 "Finished codegen for target test-rel-pos"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=93,94 "Finished codegen for target test-rel-pos"
 .PHONY : tests/CMakeFiles/test-rel-pos.dir/codegen
 
 # clean rule for target.
@@ -1038,12 +1044,12 @@ tests/CMakeFiles/test-customop.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-customop.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-customop.dir/build.make tests/CMakeFiles/test-customop.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-customop.dir/build.make tests/CMakeFiles/test-customop.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=77,78 "Built target test-customop"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=78 "Built target test-customop"
 .PHONY : tests/CMakeFiles/test-customop.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-customop.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 24
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-customop.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-customop.dir/rule
@@ -1055,7 +1061,7 @@ test-customop: tests/CMakeFiles/test-customop.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-customop.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-customop.dir/build.make tests/CMakeFiles/test-customop.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=77,78 "Finished codegen for target test-customop"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=78 "Finished codegen for target test-customop"
 .PHONY : tests/CMakeFiles/test-customop.dir/codegen
 
 # clean rule for target.
@@ -1072,12 +1078,12 @@ tests/CMakeFiles/test-conv1d.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-conv1d.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv1d.dir/build.make tests/CMakeFiles/test-conv1d.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv1d.dir/build.make tests/CMakeFiles/test-conv1d.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=68,69 "Built target test-conv1d"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=69,70 "Built target test-conv1d"
 .PHONY : tests/CMakeFiles/test-conv1d.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-conv1d.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-conv1d.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-conv1d.dir/rule
@@ -1089,7 +1095,7 @@ test-conv1d: tests/CMakeFiles/test-conv1d.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-conv1d.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv1d.dir/build.make tests/CMakeFiles/test-conv1d.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=68,69 "Finished codegen for target test-conv1d"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=69,70 "Finished codegen for target test-conv1d"
 .PHONY : tests/CMakeFiles/test-conv1d.dir/codegen
 
 # clean rule for target.
@@ -1106,12 +1112,12 @@ tests/CMakeFiles/test-conv1d-dw-c1.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-conv1d-dw-c1.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv1d-dw-c1.dir/build.make tests/CMakeFiles/test-conv1d-dw-c1.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv1d-dw-c1.dir/build.make tests/CMakeFiles/test-conv1d-dw-c1.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=70,71 "Built target test-conv1d-dw-c1"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=71,72 "Built target test-conv1d-dw-c1"
 .PHONY : tests/CMakeFiles/test-conv1d-dw-c1.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-conv1d-dw-c1.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-conv1d-dw-c1.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-conv1d-dw-c1.dir/rule
@@ -1123,7 +1129,7 @@ test-conv1d-dw-c1: tests/CMakeFiles/test-conv1d-dw-c1.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-conv1d-dw-c1.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv1d-dw-c1.dir/build.make tests/CMakeFiles/test-conv1d-dw-c1.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=70,71 "Finished codegen for target test-conv1d-dw-c1"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=71,72 "Finished codegen for target test-conv1d-dw-c1"
 .PHONY : tests/CMakeFiles/test-conv1d-dw-c1.dir/codegen
 
 # clean rule for target.
@@ -1140,12 +1146,12 @@ tests/CMakeFiles/test-conv1d-dw-c2.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-conv1d-dw-c2.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv1d-dw-c2.dir/build.make tests/CMakeFiles/test-conv1d-dw-c2.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv1d-dw-c2.dir/build.make tests/CMakeFiles/test-conv1d-dw-c2.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=72 "Built target test-conv1d-dw-c2"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=73 "Built target test-conv1d-dw-c2"
 .PHONY : tests/CMakeFiles/test-conv1d-dw-c2.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-conv1d-dw-c2.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 24
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-conv1d-dw-c2.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-conv1d-dw-c2.dir/rule
@@ -1157,7 +1163,7 @@ test-conv1d-dw-c2: tests/CMakeFiles/test-conv1d-dw-c2.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-conv1d-dw-c2.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv1d-dw-c2.dir/build.make tests/CMakeFiles/test-conv1d-dw-c2.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=72 "Finished codegen for target test-conv1d-dw-c2"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=73 "Finished codegen for target test-conv1d-dw-c2"
 .PHONY : tests/CMakeFiles/test-conv1d-dw-c2.dir/codegen
 
 # clean rule for target.
@@ -1174,12 +1180,12 @@ tests/CMakeFiles/test-conv2d.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-conv2d.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv2d.dir/build.make tests/CMakeFiles/test-conv2d.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv2d.dir/build.make tests/CMakeFiles/test-conv2d.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=73,74 "Built target test-conv2d"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=74,75 "Built target test-conv2d"
 .PHONY : tests/CMakeFiles/test-conv2d.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-conv2d.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-conv2d.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-conv2d.dir/rule
@@ -1191,7 +1197,7 @@ test-conv2d: tests/CMakeFiles/test-conv2d.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-conv2d.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv2d.dir/build.make tests/CMakeFiles/test-conv2d.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=73,74 "Finished codegen for target test-conv2d"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=74,75 "Finished codegen for target test-conv2d"
 .PHONY : tests/CMakeFiles/test-conv2d.dir/codegen
 
 # clean rule for target.
@@ -1208,12 +1214,12 @@ tests/CMakeFiles/test-conv2d-dw.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-conv2d-dw.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv2d-dw.dir/build.make tests/CMakeFiles/test-conv2d-dw.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv2d-dw.dir/build.make tests/CMakeFiles/test-conv2d-dw.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=75,76 "Built target test-conv2d-dw"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=76,77 "Built target test-conv2d-dw"
 .PHONY : tests/CMakeFiles/test-conv2d-dw.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-conv2d-dw.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-conv2d-dw.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-conv2d-dw.dir/rule
@@ -1225,7 +1231,7 @@ test-conv2d-dw: tests/CMakeFiles/test-conv2d-dw.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-conv2d-dw.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-conv2d-dw.dir/build.make tests/CMakeFiles/test-conv2d-dw.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=75,76 "Finished codegen for target test-conv2d-dw"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=76,77 "Finished codegen for target test-conv2d-dw"
 .PHONY : tests/CMakeFiles/test-conv2d-dw.dir/codegen
 
 # clean rule for target.
@@ -1242,12 +1248,12 @@ tests/CMakeFiles/test-cont.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-cont.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-cont.dir/build.make tests/CMakeFiles/test-cont.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-cont.dir/build.make tests/CMakeFiles/test-cont.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=63,64 "Built target test-cont"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=64,65 "Built target test-cont"
 .PHONY : tests/CMakeFiles/test-cont.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-cont.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-cont.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-cont.dir/rule
@@ -1259,7 +1265,7 @@ test-cont: tests/CMakeFiles/test-cont.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-cont.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-cont.dir/build.make tests/CMakeFiles/test-cont.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=63,64 "Finished codegen for target test-cont"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=64,65 "Finished codegen for target test-cont"
 .PHONY : tests/CMakeFiles/test-cont.dir/codegen
 
 # clean rule for target.
@@ -1276,12 +1282,12 @@ tests/CMakeFiles/test-interpolate.dir/all: src/CMakeFiles/ggml.dir/all
 tests/CMakeFiles/test-interpolate.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-interpolate.dir/build.make tests/CMakeFiles/test-interpolate.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-interpolate.dir/build.make tests/CMakeFiles/test-interpolate.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=80,81 "Built target test-interpolate"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=81,82 "Built target test-interpolate"
 .PHONY : tests/CMakeFiles/test-interpolate.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test-interpolate.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test-interpolate.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test-interpolate.dir/rule
@@ -1293,7 +1299,7 @@ test-interpolate: tests/CMakeFiles/test-interpolate.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test-interpolate.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test-interpolate.dir/build.make tests/CMakeFiles/test-interpolate.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=80,81 "Finished codegen for target test-interpolate"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=81,82 "Finished codegen for target test-interpolate"
 .PHONY : tests/CMakeFiles/test-interpolate.dir/codegen
 
 # clean rule for target.
@@ -1347,7 +1353,7 @@ examples/CMakeFiles/common-ggml.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 
 # Build rule for subdir invocation for target.
 examples/CMakeFiles/common-ggml.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/CMakeFiles/common-ggml.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/CMakeFiles/common-ggml.dir/rule
@@ -1382,7 +1388,7 @@ examples/yolo/CMakeFiles/yolov3-tiny.dir/all: examples/CMakeFiles/common.dir/all
 
 # Build rule for subdir invocation for target.
 examples/yolo/CMakeFiles/yolov3-tiny.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/yolo/CMakeFiles/yolov3-tiny.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/yolo/CMakeFiles/yolov3-tiny.dir/rule
@@ -1417,7 +1423,7 @@ examples/opencog/CMakeFiles/opencog-simple.dir/all: examples/CMakeFiles/common-g
 
 # Build rule for subdir invocation for target.
 examples/opencog/CMakeFiles/opencog-simple.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/opencog/CMakeFiles/opencog-simple.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/opencog/CMakeFiles/opencog-simple.dir/rule
@@ -1452,7 +1458,7 @@ examples/opencog/CMakeFiles/opencog-reasoning.dir/all: examples/CMakeFiles/commo
 
 # Build rule for subdir invocation for target.
 examples/opencog/CMakeFiles/opencog-reasoning.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/opencog/CMakeFiles/opencog-reasoning.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/opencog/CMakeFiles/opencog-reasoning.dir/rule
@@ -1482,12 +1488,12 @@ examples/opencog/CMakeFiles/opencog-advanced.dir/all: src/CMakeFiles/ggml-cpu.di
 examples/opencog/CMakeFiles/opencog-advanced.dir/all: examples/CMakeFiles/common-ggml.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-advanced.dir/build.make examples/opencog/CMakeFiles/opencog-advanced.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-advanced.dir/build.make examples/opencog/CMakeFiles/opencog-advanced.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=49,50 "Built target opencog-advanced"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=47,48 "Built target opencog-advanced"
 .PHONY : examples/opencog/CMakeFiles/opencog-advanced.dir/all
 
 # Build rule for subdir invocation for target.
 examples/opencog/CMakeFiles/opencog-advanced.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/opencog/CMakeFiles/opencog-advanced.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/opencog/CMakeFiles/opencog-advanced.dir/rule
@@ -1499,13 +1505,83 @@ opencog-advanced: examples/opencog/CMakeFiles/opencog-advanced.dir/rule
 # codegen rule for target.
 examples/opencog/CMakeFiles/opencog-advanced.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-advanced.dir/build.make examples/opencog/CMakeFiles/opencog-advanced.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=49,50 "Finished codegen for target opencog-advanced"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=47,48 "Finished codegen for target opencog-advanced"
 .PHONY : examples/opencog/CMakeFiles/opencog-advanced.dir/codegen
 
 # clean rule for target.
 examples/opencog/CMakeFiles/opencog-advanced.dir/clean:
 	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-advanced.dir/build.make examples/opencog/CMakeFiles/opencog-advanced.dir/clean
 .PHONY : examples/opencog/CMakeFiles/opencog-advanced.dir/clean
+
+#=============================================================================
+# Target rules for target examples/opencog/CMakeFiles/opencog-hebbian.dir
+
+# All Build rule for target.
+examples/opencog/CMakeFiles/opencog-hebbian.dir/all: src/CMakeFiles/ggml-base.dir/all
+examples/opencog/CMakeFiles/opencog-hebbian.dir/all: src/CMakeFiles/ggml.dir/all
+examples/opencog/CMakeFiles/opencog-hebbian.dir/all: src/CMakeFiles/ggml-cpu.dir/all
+examples/opencog/CMakeFiles/opencog-hebbian.dir/all: examples/CMakeFiles/common-ggml.dir/all
+	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-hebbian.dir/build.make examples/opencog/CMakeFiles/opencog-hebbian.dir/depend
+	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-hebbian.dir/build.make examples/opencog/CMakeFiles/opencog-hebbian.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=49,50 "Built target opencog-hebbian"
+.PHONY : examples/opencog/CMakeFiles/opencog-hebbian.dir/all
+
+# Build rule for subdir invocation for target.
+examples/opencog/CMakeFiles/opencog-hebbian.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/opencog/CMakeFiles/opencog-hebbian.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
+.PHONY : examples/opencog/CMakeFiles/opencog-hebbian.dir/rule
+
+# Convenience name for target.
+opencog-hebbian: examples/opencog/CMakeFiles/opencog-hebbian.dir/rule
+.PHONY : opencog-hebbian
+
+# codegen rule for target.
+examples/opencog/CMakeFiles/opencog-hebbian.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-hebbian.dir/build.make examples/opencog/CMakeFiles/opencog-hebbian.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=49,50 "Finished codegen for target opencog-hebbian"
+.PHONY : examples/opencog/CMakeFiles/opencog-hebbian.dir/codegen
+
+# clean rule for target.
+examples/opencog/CMakeFiles/opencog-hebbian.dir/clean:
+	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-hebbian.dir/build.make examples/opencog/CMakeFiles/opencog-hebbian.dir/clean
+.PHONY : examples/opencog/CMakeFiles/opencog-hebbian.dir/clean
+
+#=============================================================================
+# Target rules for target examples/opencog/CMakeFiles/opencog-temporal.dir
+
+# All Build rule for target.
+examples/opencog/CMakeFiles/opencog-temporal.dir/all: src/CMakeFiles/ggml-base.dir/all
+examples/opencog/CMakeFiles/opencog-temporal.dir/all: src/CMakeFiles/ggml.dir/all
+examples/opencog/CMakeFiles/opencog-temporal.dir/all: src/CMakeFiles/ggml-cpu.dir/all
+examples/opencog/CMakeFiles/opencog-temporal.dir/all: examples/CMakeFiles/common-ggml.dir/all
+	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-temporal.dir/build.make examples/opencog/CMakeFiles/opencog-temporal.dir/depend
+	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-temporal.dir/build.make examples/opencog/CMakeFiles/opencog-temporal.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=54,55 "Built target opencog-temporal"
+.PHONY : examples/opencog/CMakeFiles/opencog-temporal.dir/all
+
+# Build rule for subdir invocation for target.
+examples/opencog/CMakeFiles/opencog-temporal.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/opencog/CMakeFiles/opencog-temporal.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
+.PHONY : examples/opencog/CMakeFiles/opencog-temporal.dir/rule
+
+# Convenience name for target.
+opencog-temporal: examples/opencog/CMakeFiles/opencog-temporal.dir/rule
+.PHONY : opencog-temporal
+
+# codegen rule for target.
+examples/opencog/CMakeFiles/opencog-temporal.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-temporal.dir/build.make examples/opencog/CMakeFiles/opencog-temporal.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=54,55 "Finished codegen for target opencog-temporal"
+.PHONY : examples/opencog/CMakeFiles/opencog-temporal.dir/codegen
+
+# clean rule for target.
+examples/opencog/CMakeFiles/opencog-temporal.dir/clean:
+	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-temporal.dir/build.make examples/opencog/CMakeFiles/opencog-temporal.dir/clean
+.PHONY : examples/opencog/CMakeFiles/opencog-temporal.dir/clean
 
 #=============================================================================
 # Target rules for target examples/gpt-2/CMakeFiles/gpt-2-ctx.dir
@@ -1518,12 +1594,12 @@ examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/all: examples/CMakeFiles/common.dir/all
 examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/all: examples/CMakeFiles/common-ggml.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=33,34 "Built target gpt-2-ctx"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=32,33 "Built target gpt-2-ctx"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/all
 
 # Build rule for subdir invocation for target.
 examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 29
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/rule
@@ -1535,7 +1611,7 @@ gpt-2-ctx: examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/rule
 # codegen rule for target.
 examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=33,34 "Finished codegen for target gpt-2-ctx"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=32,33 "Finished codegen for target gpt-2-ctx"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-ctx.dir/codegen
 
 # clean rule for target.
@@ -1554,12 +1630,12 @@ examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/all: examples/CMakeFiles/common.dir/al
 examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/all: examples/CMakeFiles/common-ggml.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=28 "Built target gpt-2-alloc"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=27 "Built target gpt-2-alloc"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/all
 
 # Build rule for subdir invocation for target.
 examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/rule
@@ -1571,7 +1647,7 @@ gpt-2-alloc: examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/rule
 # codegen rule for target.
 examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=28 "Finished codegen for target gpt-2-alloc"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=27 "Finished codegen for target gpt-2-alloc"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-alloc.dir/codegen
 
 # clean rule for target.
@@ -1590,12 +1666,12 @@ examples/gpt-2/CMakeFiles/gpt-2-backend.dir/all: examples/CMakeFiles/common.dir/
 examples/gpt-2/CMakeFiles/gpt-2-backend.dir/all: examples/CMakeFiles/common-ggml.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-backend.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-backend.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-backend.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-backend.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=29,30 "Built target gpt-2-backend"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=28,29 "Built target gpt-2-backend"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-backend.dir/all
 
 # Build rule for subdir invocation for target.
 examples/gpt-2/CMakeFiles/gpt-2-backend.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 29
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/gpt-2/CMakeFiles/gpt-2-backend.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-backend.dir/rule
@@ -1607,7 +1683,7 @@ gpt-2-backend: examples/gpt-2/CMakeFiles/gpt-2-backend.dir/rule
 # codegen rule for target.
 examples/gpt-2/CMakeFiles/gpt-2-backend.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-backend.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-backend.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=29,30 "Finished codegen for target gpt-2-backend"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=28,29 "Finished codegen for target gpt-2-backend"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-backend.dir/codegen
 
 # clean rule for target.
@@ -1626,12 +1702,12 @@ examples/gpt-2/CMakeFiles/gpt-2-sched.dir/all: examples/CMakeFiles/common.dir/al
 examples/gpt-2/CMakeFiles/gpt-2-sched.dir/all: examples/CMakeFiles/common-ggml.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-sched.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-sched.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-sched.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-sched.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=36,37 "Built target gpt-2-sched"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=35,36 "Built target gpt-2-sched"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-sched.dir/all
 
 # Build rule for subdir invocation for target.
 examples/gpt-2/CMakeFiles/gpt-2-sched.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 29
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/gpt-2/CMakeFiles/gpt-2-sched.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-sched.dir/rule
@@ -1643,7 +1719,7 @@ gpt-2-sched: examples/gpt-2/CMakeFiles/gpt-2-sched.dir/rule
 # codegen rule for target.
 examples/gpt-2/CMakeFiles/gpt-2-sched.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-sched.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-sched.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=36,37 "Finished codegen for target gpt-2-sched"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=35,36 "Finished codegen for target gpt-2-sched"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-sched.dir/codegen
 
 # clean rule for target.
@@ -1662,12 +1738,12 @@ examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/all: examples/CMakeFiles/common.dir
 examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/all: examples/CMakeFiles/common-ggml.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=35 "Built target gpt-2-quantize"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=34 "Built target gpt-2-quantize"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/all
 
 # Build rule for subdir invocation for target.
 examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/rule
@@ -1679,7 +1755,7 @@ gpt-2-quantize: examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/rule
 # codegen rule for target.
 examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=35 "Finished codegen for target gpt-2-quantize"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=34 "Finished codegen for target gpt-2-quantize"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-quantize.dir/codegen
 
 # clean rule for target.
@@ -1698,12 +1774,12 @@ examples/gpt-2/CMakeFiles/gpt-2-batched.dir/all: examples/CMakeFiles/common.dir/
 examples/gpt-2/CMakeFiles/gpt-2-batched.dir/all: examples/CMakeFiles/common-ggml.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-batched.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-batched.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-batched.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-batched.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=31,32 "Built target gpt-2-batched"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=30,31 "Built target gpt-2-batched"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-batched.dir/all
 
 # Build rule for subdir invocation for target.
 examples/gpt-2/CMakeFiles/gpt-2-batched.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 29
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/gpt-2/CMakeFiles/gpt-2-batched.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-batched.dir/rule
@@ -1715,7 +1791,7 @@ gpt-2-batched: examples/gpt-2/CMakeFiles/gpt-2-batched.dir/rule
 # codegen rule for target.
 examples/gpt-2/CMakeFiles/gpt-2-batched.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/gpt-2/CMakeFiles/gpt-2-batched.dir/build.make examples/gpt-2/CMakeFiles/gpt-2-batched.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=31,32 "Finished codegen for target gpt-2-batched"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=30,31 "Finished codegen for target gpt-2-batched"
 .PHONY : examples/gpt-2/CMakeFiles/gpt-2-batched.dir/codegen
 
 # clean rule for target.
@@ -1734,12 +1810,12 @@ examples/gpt-j/CMakeFiles/gpt-j.dir/all: examples/CMakeFiles/common.dir/all
 examples/gpt-j/CMakeFiles/gpt-j.dir/all: examples/CMakeFiles/common-ggml.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/gpt-j/CMakeFiles/gpt-j.dir/build.make examples/gpt-j/CMakeFiles/gpt-j.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/gpt-j/CMakeFiles/gpt-j.dir/build.make examples/gpt-j/CMakeFiles/gpt-j.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=38,39 "Built target gpt-j"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=37,38 "Built target gpt-j"
 .PHONY : examples/gpt-j/CMakeFiles/gpt-j.dir/all
 
 # Build rule for subdir invocation for target.
 examples/gpt-j/CMakeFiles/gpt-j.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 29
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/gpt-j/CMakeFiles/gpt-j.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/gpt-j/CMakeFiles/gpt-j.dir/rule
@@ -1751,7 +1827,7 @@ gpt-j: examples/gpt-j/CMakeFiles/gpt-j.dir/rule
 # codegen rule for target.
 examples/gpt-j/CMakeFiles/gpt-j.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/gpt-j/CMakeFiles/gpt-j.dir/build.make examples/gpt-j/CMakeFiles/gpt-j.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=38,39 "Finished codegen for target gpt-j"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=37,38 "Finished codegen for target gpt-j"
 .PHONY : examples/gpt-j/CMakeFiles/gpt-j.dir/codegen
 
 # clean rule for target.
@@ -1770,12 +1846,12 @@ examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/all: examples/CMakeFiles/common.dir
 examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/all: examples/CMakeFiles/common-ggml.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/build.make examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/build.make examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=40,41 "Built target gpt-j-quantize"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=39 "Built target gpt-j-quantize"
 .PHONY : examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/all
 
 # Build rule for subdir invocation for target.
 examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 29
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/rule
@@ -1787,7 +1863,7 @@ gpt-j-quantize: examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/rule
 # codegen rule for target.
 examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/build.make examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=40,41 "Finished codegen for target gpt-j-quantize"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=39 "Finished codegen for target gpt-j-quantize"
 .PHONY : examples/gpt-j/CMakeFiles/gpt-j-quantize.dir/codegen
 
 # clean rule for target.
@@ -1805,12 +1881,12 @@ examples/mnist/CMakeFiles/mnist-common.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 examples/mnist/CMakeFiles/mnist-common.dir/all: examples/CMakeFiles/common.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/mnist/CMakeFiles/mnist-common.dir/build.make examples/mnist/CMakeFiles/mnist-common.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/mnist/CMakeFiles/mnist-common.dir/build.make examples/mnist/CMakeFiles/mnist-common.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=43,44 "Built target mnist-common"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=42,43 "Built target mnist-common"
 .PHONY : examples/mnist/CMakeFiles/mnist-common.dir/all
 
 # Build rule for subdir invocation for target.
 examples/mnist/CMakeFiles/mnist-common.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/mnist/CMakeFiles/mnist-common.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/mnist/CMakeFiles/mnist-common.dir/rule
@@ -1822,7 +1898,7 @@ mnist-common: examples/mnist/CMakeFiles/mnist-common.dir/rule
 # codegen rule for target.
 examples/mnist/CMakeFiles/mnist-common.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/mnist/CMakeFiles/mnist-common.dir/build.make examples/mnist/CMakeFiles/mnist-common.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=43,44 "Finished codegen for target mnist-common"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=42,43 "Finished codegen for target mnist-common"
 .PHONY : examples/mnist/CMakeFiles/mnist-common.dir/codegen
 
 # clean rule for target.
@@ -1841,12 +1917,12 @@ examples/mnist/CMakeFiles/mnist-eval.dir/all: examples/CMakeFiles/common.dir/all
 examples/mnist/CMakeFiles/mnist-eval.dir/all: examples/mnist/CMakeFiles/mnist-common.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/mnist/CMakeFiles/mnist-eval.dir/build.make examples/mnist/CMakeFiles/mnist-eval.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/mnist/CMakeFiles/mnist-eval.dir/build.make examples/mnist/CMakeFiles/mnist-eval.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=45,46 "Built target mnist-eval"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=44 "Built target mnist-eval"
 .PHONY : examples/mnist/CMakeFiles/mnist-eval.dir/all
 
 # Build rule for subdir invocation for target.
 examples/mnist/CMakeFiles/mnist-eval.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 29
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/mnist/CMakeFiles/mnist-eval.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/mnist/CMakeFiles/mnist-eval.dir/rule
@@ -1858,7 +1934,7 @@ mnist-eval: examples/mnist/CMakeFiles/mnist-eval.dir/rule
 # codegen rule for target.
 examples/mnist/CMakeFiles/mnist-eval.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/mnist/CMakeFiles/mnist-eval.dir/build.make examples/mnist/CMakeFiles/mnist-eval.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=45,46 "Finished codegen for target mnist-eval"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=44 "Finished codegen for target mnist-eval"
 .PHONY : examples/mnist/CMakeFiles/mnist-eval.dir/codegen
 
 # clean rule for target.
@@ -1877,12 +1953,12 @@ examples/mnist/CMakeFiles/mnist-train.dir/all: examples/CMakeFiles/common.dir/al
 examples/mnist/CMakeFiles/mnist-train.dir/all: examples/mnist/CMakeFiles/mnist-common.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/mnist/CMakeFiles/mnist-train.dir/build.make examples/mnist/CMakeFiles/mnist-train.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/mnist/CMakeFiles/mnist-train.dir/build.make examples/mnist/CMakeFiles/mnist-train.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=47,48 "Built target mnist-train"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=45,46 "Built target mnist-train"
 .PHONY : examples/mnist/CMakeFiles/mnist-train.dir/all
 
 # Build rule for subdir invocation for target.
 examples/mnist/CMakeFiles/mnist-train.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 29
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 28
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/mnist/CMakeFiles/mnist-train.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/mnist/CMakeFiles/mnist-train.dir/rule
@@ -1894,7 +1970,7 @@ mnist-train: examples/mnist/CMakeFiles/mnist-train.dir/rule
 # codegen rule for target.
 examples/mnist/CMakeFiles/mnist-train.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/mnist/CMakeFiles/mnist-train.dir/build.make examples/mnist/CMakeFiles/mnist-train.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=47,48 "Finished codegen for target mnist-train"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=45,46 "Finished codegen for target mnist-train"
 .PHONY : examples/mnist/CMakeFiles/mnist-train.dir/codegen
 
 # clean rule for target.
@@ -1912,12 +1988,12 @@ examples/sam/CMakeFiles/sam.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 examples/sam/CMakeFiles/sam.dir/all: examples/CMakeFiles/common.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/sam/CMakeFiles/sam.dir/build.make examples/sam/CMakeFiles/sam.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/sam/CMakeFiles/sam.dir/build.make examples/sam/CMakeFiles/sam.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=54,55 "Built target sam"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=56 "Built target sam"
 .PHONY : examples/sam/CMakeFiles/sam.dir/all
 
 # Build rule for subdir invocation for target.
 examples/sam/CMakeFiles/sam.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 27
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/sam/CMakeFiles/sam.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/sam/CMakeFiles/sam.dir/rule
@@ -1929,7 +2005,7 @@ sam: examples/sam/CMakeFiles/sam.dir/rule
 # codegen rule for target.
 examples/sam/CMakeFiles/sam.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/sam/CMakeFiles/sam.dir/build.make examples/sam/CMakeFiles/sam.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=54,55 "Finished codegen for target sam"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=56 "Finished codegen for target sam"
 .PHONY : examples/sam/CMakeFiles/sam.dir/codegen
 
 # clean rule for target.
@@ -1946,7 +2022,7 @@ examples/simple/CMakeFiles/simple-ctx.dir/all: src/CMakeFiles/ggml.dir/all
 examples/simple/CMakeFiles/simple-ctx.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/simple/CMakeFiles/simple-ctx.dir/build.make examples/simple/CMakeFiles/simple-ctx.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/simple/CMakeFiles/simple-ctx.dir/build.make examples/simple/CMakeFiles/simple-ctx.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=58 "Built target simple-ctx"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=59,60 "Built target simple-ctx"
 .PHONY : examples/simple/CMakeFiles/simple-ctx.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1963,7 +2039,7 @@ simple-ctx: examples/simple/CMakeFiles/simple-ctx.dir/rule
 # codegen rule for target.
 examples/simple/CMakeFiles/simple-ctx.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/simple/CMakeFiles/simple-ctx.dir/build.make examples/simple/CMakeFiles/simple-ctx.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=58 "Finished codegen for target simple-ctx"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=59,60 "Finished codegen for target simple-ctx"
 .PHONY : examples/simple/CMakeFiles/simple-ctx.dir/codegen
 
 # clean rule for target.
@@ -1980,12 +2056,12 @@ examples/simple/CMakeFiles/simple-backend.dir/all: src/CMakeFiles/ggml.dir/all
 examples/simple/CMakeFiles/simple-backend.dir/all: src/CMakeFiles/ggml-cpu.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/simple/CMakeFiles/simple-backend.dir/build.make examples/simple/CMakeFiles/simple-backend.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/simple/CMakeFiles/simple-backend.dir/build.make examples/simple/CMakeFiles/simple-backend.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=56,57 "Built target simple-backend"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=57,58 "Built target simple-backend"
 .PHONY : examples/simple/CMakeFiles/simple-backend.dir/all
 
 # Build rule for subdir invocation for target.
 examples/simple/CMakeFiles/simple-backend.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 25
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/simple/CMakeFiles/simple-backend.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles 0
 .PHONY : examples/simple/CMakeFiles/simple-backend.dir/rule
@@ -1997,7 +2073,7 @@ simple-backend: examples/simple/CMakeFiles/simple-backend.dir/rule
 # codegen rule for target.
 examples/simple/CMakeFiles/simple-backend.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/simple/CMakeFiles/simple-backend.dir/build.make examples/simple/CMakeFiles/simple-backend.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=56,57 "Finished codegen for target simple-backend"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=57,58 "Finished codegen for target simple-backend"
 .PHONY : examples/simple/CMakeFiles/simple-backend.dir/codegen
 
 # clean rule for target.
@@ -2016,7 +2092,7 @@ examples/magika/CMakeFiles/magika.dir/all: examples/CMakeFiles/common.dir/all
 examples/magika/CMakeFiles/magika.dir/all: examples/CMakeFiles/common-ggml.dir/all
 	$(MAKE) $(MAKESILENT) -f examples/magika/CMakeFiles/magika.dir/build.make examples/magika/CMakeFiles/magika.dir/depend
 	$(MAKE) $(MAKESILENT) -f examples/magika/CMakeFiles/magika.dir/build.make examples/magika/CMakeFiles/magika.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=42 "Built target magika"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=40,41 "Built target magika"
 .PHONY : examples/magika/CMakeFiles/magika.dir/all
 
 # Build rule for subdir invocation for target.
@@ -2033,7 +2109,7 @@ magika: examples/magika/CMakeFiles/magika.dir/rule
 # codegen rule for target.
 examples/magika/CMakeFiles/magika.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f examples/magika/CMakeFiles/magika.dir/build.make examples/magika/CMakeFiles/magika.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=42 "Finished codegen for target magika"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/coggml/coggml/_codeql_build_dir/CMakeFiles --progress-num=40,41 "Finished codegen for target magika"
 .PHONY : examples/magika/CMakeFiles/magika.dir/codegen
 
 # clean rule for target.

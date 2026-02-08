@@ -578,6 +578,32 @@ opencog-advanced/fast:
 .PHONY : opencog-advanced/fast
 
 #=============================================================================
+# Target rules for targets named opencog-hebbian
+
+# Build rule for target.
+opencog-hebbian: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 opencog-hebbian
+.PHONY : opencog-hebbian
+
+# fast build rule for target.
+opencog-hebbian/fast:
+	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-hebbian.dir/build.make examples/opencog/CMakeFiles/opencog-hebbian.dir/build
+.PHONY : opencog-hebbian/fast
+
+#=============================================================================
+# Target rules for targets named opencog-temporal
+
+# Build rule for target.
+opencog-temporal: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 opencog-temporal
+.PHONY : opencog-temporal
+
+# fast build rule for target.
+opencog-temporal/fast:
+	$(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-temporal.dir/build.make examples/opencog/CMakeFiles/opencog-temporal.dir/build
+.PHONY : opencog-temporal/fast
+
+#=============================================================================
 # Target rules for targets named gpt-2-ctx
 
 # Build rule for target.
@@ -803,8 +829,10 @@ help:
 	@echo "... mnist-eval"
 	@echo "... mnist-train"
 	@echo "... opencog-advanced"
+	@echo "... opencog-hebbian"
 	@echo "... opencog-reasoning"
 	@echo "... opencog-simple"
+	@echo "... opencog-temporal"
 	@echo "... sam"
 	@echo "... simple-backend"
 	@echo "... simple-ctx"

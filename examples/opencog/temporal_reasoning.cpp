@@ -51,6 +51,7 @@ int main() {
     ggml_opencog_set_time_interval(atomspace, lunch_id, 12000, 13000);      // 12:00-13:00
     ggml_opencog_set_time_interval(atomspace, meeting_id, 14000, 15000);    // 14:00-15:00
     ggml_opencog_set_time_interval(atomspace, dinner_id, 18000, 19000);     // 18:00-19:00
+    // Note: Sleep spans into next day. 31000 represents 7:00am next day (24h = 24000, so 31000 = 7:00am)
     ggml_opencog_set_time_interval(atomspace, sleep_id, 22000, 31000);      // 22:00-7:00 (next day)
     
     std::cout << "Daily events:\n";

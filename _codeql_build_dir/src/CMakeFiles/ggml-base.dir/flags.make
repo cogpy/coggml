@@ -3,13 +3,13 @@
 
 # compile C with /home/runner/work/coggml/.codeql-scratch/dbs/cpp/working/autobuild/bin/cc
 # compile CXX with /home/runner/work/coggml/.codeql-scratch/dbs/cpp/working/autobuild/bin/c++
-C_DEFINES = -DGGML_BUILD -DGGML_COMMIT=\"720dc3c\" -DGGML_SCHED_MAX_COPIES=4 -DGGML_SHARED -DGGML_VERSION=\"0.9.4-dirty\" -D_GNU_SOURCE -D_XOPEN_SOURCE=600 -Dggml_base_EXPORTS
+C_DEFINES = -DGGML_BUILD -DGGML_COMMIT=\"57a45c1\" -DGGML_SCHED_MAX_COPIES=4 -DGGML_SHARED -DGGML_VERSION=\"0.9.4-dirty\" -D_GNU_SOURCE -D_XOPEN_SOURCE=600 -Dggml_base_EXPORTS
 
 C_INCLUDES = -I/home/runner/work/coggml/coggml/src/. -I/home/runner/work/coggml/coggml/src/../include
 
 C_FLAGS = -O3 -DNDEBUG -std=gnu11 -fPIC -Wshadow -Wstrict-prototypes -Wpointer-arith -Wmissing-prototypes -Werror=implicit-int -Werror=implicit-function-declaration -Wall -Wextra -Wpedantic -Wcast-qual -Wno-unused-function -Wdouble-promotion
 
-CXX_DEFINES = -DGGML_BUILD -DGGML_COMMIT=\"720dc3c\" -DGGML_SCHED_MAX_COPIES=4 -DGGML_SHARED -DGGML_VERSION=\"0.9.4-dirty\" -D_GNU_SOURCE -D_XOPEN_SOURCE=600 -Dggml_base_EXPORTS
+CXX_DEFINES = -DGGML_BUILD -DGGML_COMMIT=\"57a45c1\" -DGGML_SCHED_MAX_COPIES=4 -DGGML_SHARED -DGGML_VERSION=\"0.9.4-dirty\" -D_GNU_SOURCE -D_XOPEN_SOURCE=600 -Dggml_base_EXPORTS
 
 CXX_INCLUDES = -I/home/runner/work/coggml/coggml/src/. -I/home/runner/work/coggml/coggml/src/../include
 

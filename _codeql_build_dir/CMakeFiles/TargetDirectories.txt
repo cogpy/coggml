@@ -71,6 +71,8 @@
 /home/runner/work/coggml/coggml/_codeql_build_dir/examples/opencog/CMakeFiles/opencog-simple.dir
 /home/runner/work/coggml/coggml/_codeql_build_dir/examples/opencog/CMakeFiles/opencog-reasoning.dir
 /home/runner/work/coggml/coggml/_codeql_build_dir/examples/opencog/CMakeFiles/opencog-advanced.dir
+/home/runner/work/coggml/coggml/_codeql_build_dir/examples/opencog/CMakeFiles/opencog-hebbian.dir
+/home/runner/work/coggml/coggml/_codeql_build_dir/examples/opencog/CMakeFiles/opencog-temporal.dir
 /home/runner/work/coggml/coggml/_codeql_build_dir/examples/opencog/CMakeFiles/test.dir
 /home/runner/work/coggml/coggml/_codeql_build_dir/examples/opencog/CMakeFiles/edit_cache.dir
 /home/runner/work/coggml/coggml/_codeql_build_dir/examples/opencog/CMakeFiles/rebuild_cache.dir
