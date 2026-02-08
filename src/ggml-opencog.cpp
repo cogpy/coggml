@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cmath>
+#include <cstdlib>
 #include <algorithm>
 #include <random>
 
@@ -111,6 +112,9 @@ uint64_t ggml_opencog_add_atom(struct ggml_opencog_atomspace* atomspace,
     atom->lti = 0.0f;    // No long-term importance yet
     atom->vlti = 0.0f;   // No very long-term importance yet
     
+    // Initialize temporal information
+    atom->time_interval = nullptr;  // No time interval by default
+    
     // Initialize embedding based on type and name
     std::vector<float> embedding_data(atomspace->embedding_dim);
     
@@ -214,6 +218,11 @@ bool ggml_opencog_remove_atom(struct ggml_opencog_atomspace* atomspace, uint64_t
     
     auto& type_vec = atomspace->type_index[atom->type];
     type_vec.erase(std::remove(type_vec.begin(), type_vec.end(), id), type_vec.end());
+    
+    // Clean up temporal data if present
+    if (atom->time_interval) {
+        delete atom->time_interval;
+    }
     
     // Remove the atom
     atomspace->atoms.erase(it);
@@ -467,6 +476,124 @@ void ggml_opencog_normalize_embedding(struct ggml_opencog_atomspace* atomspace,
     for (int i = 0; i < dim; i++) {
         atom->embedding_data[i] /= norm;
     }
+}
+
+// Temporal reasoning implementation
+
+// Set a time interval for an atom
+void ggml_opencog_set_time_interval(struct ggml_opencog_atomspace* atomspace,
+                                   uint64_t atom_id,
+                                   int64_t start_time,
+                                   int64_t end_time) {
+    auto* atom = ggml_opencog_get_atom(atomspace, atom_id);
+    if (!atom) return;
+    
+    if (!atom->time_interval) {
+        atom->time_interval = new ggml_opencog_time_interval();
+    }
+    
+    atom->time_interval->start_time = start_time;
+    atom->time_interval->end_time = end_time;
+    atom->time_interval->is_point = (start_time == end_time);
+}
+
+// Get atoms that exist at a specific time
+std::vector<uint64_t> ggml_opencog_get_atoms_at_time(struct ggml_opencog_atomspace* atomspace,
+                                                      int64_t time) {
+    std::vector<uint64_t> result;
+    
+    for (const auto& pair : atomspace->atoms) {
+        const auto& atom = pair.second;
+        if (atom->time_interval) {
+            if (time >= atom->time_interval->start_time && 
+                time <= atom->time_interval->end_time) {
+                result.push_back(atom->id);
+            }
+        }
+    }
+    
+    return result;
+}
+
+// Get atoms that overlap with a time interval
+std::vector<uint64_t> ggml_opencog_get_atoms_in_interval(struct ggml_opencog_atomspace* atomspace,
+                                                         int64_t start_time,
+                                                         int64_t end_time) {
+    std::vector<uint64_t> result;
+    
+    for (const auto& pair : atomspace->atoms) {
+        const auto& atom = pair.second;
+        if (atom->time_interval) {
+            // Check for interval overlap
+            if (atom->time_interval->end_time >= start_time && 
+                atom->time_interval->start_time <= end_time) {
+                result.push_back(atom->id);
+            }
+        }
+    }
+    
+    return result;
+}
+
+// Check if atom1 happens before atom2
+bool ggml_opencog_happens_before(struct ggml_opencog_atomspace* atomspace,
+                                 uint64_t atom1_id,
+                                 uint64_t atom2_id) {
+    auto* atom1 = ggml_opencog_get_atom(atomspace, atom1_id);
+    auto* atom2 = ggml_opencog_get_atom(atomspace, atom2_id);
+    
+    if (!atom1 || !atom2) return false;
+    if (!atom1->time_interval || !atom2->time_interval) return false;
+    
+    return atom1->time_interval->end_time <= atom2->time_interval->start_time;
+}
+
+// Check if atom1 happens during atom2
+bool ggml_opencog_happens_during(struct ggml_opencog_atomspace* atomspace,
+                                uint64_t atom1_id,
+                                uint64_t atom2_id) {
+    auto* atom1 = ggml_opencog_get_atom(atomspace, atom1_id);
+    auto* atom2 = ggml_opencog_get_atom(atomspace, atom2_id);
+    
+    if (!atom1 || !atom2) return false;
+    if (!atom1->time_interval || !atom2->time_interval) return false;
+    
+    return atom1->time_interval->start_time >= atom2->time_interval->start_time &&
+           atom1->time_interval->end_time <= atom2->time_interval->end_time;
+}
+
+// Check if two atoms happen simultaneously (within tolerance)
+bool ggml_opencog_happens_simultaneously(struct ggml_opencog_atomspace* atomspace,
+                                        uint64_t atom1_id,
+                                        uint64_t atom2_id,
+                                        int64_t tolerance_ms) {
+    auto* atom1 = ggml_opencog_get_atom(atomspace, atom1_id);
+    auto* atom2 = ggml_opencog_get_atom(atomspace, atom2_id);
+    
+    if (!atom1 || !atom2) return false;
+    if (!atom1->time_interval || !atom2->time_interval) return false;
+    
+    int64_t start_diff = llabs(atom1->time_interval->start_time - atom2->time_interval->start_time);
+    int64_t end_diff = llabs(atom1->time_interval->end_time - atom2->time_interval->end_time);
+    
+    return start_diff <= tolerance_ms && end_diff <= tolerance_ms;
+}
+
+// Temporal induction: if A happens before B, and B happens before C,
+// then we can infer A happens before C with reduced confidence
+struct ggml_opencog_truth_value ggml_opencog_temporal_induction(
+                                                struct ggml_opencog_truth_value before_link,
+                                                struct ggml_opencog_truth_value after_link) {
+    struct ggml_opencog_truth_value result;
+    
+    // Temporal transitivity: A→B and B→C implies A→C
+    // Strength is the minimum of the two (weakest link)
+    result.strength = fminf(before_link.strength, after_link.strength);
+    
+    // Confidence degrades with chain length
+    result.confidence = before_link.confidence * after_link.confidence * 0.9f;
+    
+    return result;
 }
 
 // CogServer implementation

@@ -18,7 +18,18 @@ enum ggml_opencog_atom_type {
     GGML_OPENCOG_EVALUATION_LINK = 2,
     GGML_OPENCOG_INHERITANCE_LINK = 3,
     GGML_OPENCOG_SIMILARITY_LINK = 4,
-    GGML_OPENCOG_ATOM_TYPE_COUNT = 5
+    GGML_OPENCOG_TIME_NODE = 5,
+    GGML_OPENCOG_SEQUENTIAL_LINK = 6,
+    GGML_OPENCOG_SIMULTANEOUS_LINK = 7,
+    GGML_OPENCOG_AT_TIME_LINK = 8,
+    GGML_OPENCOG_ATOM_TYPE_COUNT = 9
+};
+
+// Time interval structure for temporal reasoning
+struct ggml_opencog_time_interval {
+    int64_t start_time;  // Unix timestamp in milliseconds
+    int64_t end_time;    // Unix timestamp in milliseconds
+    bool is_point;       // True if this represents a point in time (start == end)
 };
 
 // Truth Value structure for atoms
@@ -42,6 +53,9 @@ struct ggml_opencog_atom {
     float sti;                                 // Short-term importance (attention)
     float lti;                                 // Long-term importance (memory worthiness)
     float vlti;                                // Very long-term importance
+    
+    // Temporal information (optional)
+    struct ggml_opencog_time_interval* time_interval;  // Time interval for temporal atoms
 };
 
 // AtomSpace - the core knowledge representation
@@ -142,6 +156,40 @@ void ggml_opencog_hebbian_update_link(struct ggml_opencog_atomspace* atomspace,
 // Normalize embedding vectors to unit length
 void ggml_opencog_normalize_embedding(struct ggml_opencog_atomspace* atomspace,
                                      uint64_t atom_id);
+
+// Temporal reasoning functions
+// Add a time interval to an atom
+void ggml_opencog_set_time_interval(struct ggml_opencog_atomspace* atomspace,
+                                   uint64_t atom_id,
+                                   int64_t start_time,
+                                   int64_t end_time);
+
+// Get atoms that overlap with a time interval
+std::vector<uint64_t> ggml_opencog_get_atoms_at_time(struct ggml_opencog_atomspace* atomspace,
+                                                      int64_t time);
+
+std::vector<uint64_t> ggml_opencog_get_atoms_in_interval(struct ggml_opencog_atomspace* atomspace,
+                                                         int64_t start_time,
+                                                         int64_t end_time);
+
+// Temporal ordering queries
+bool ggml_opencog_happens_before(struct ggml_opencog_atomspace* atomspace,
+                                 uint64_t atom1_id,
+                                 uint64_t atom2_id);
+
+bool ggml_opencog_happens_during(struct ggml_opencog_atomspace* atomspace,
+                                uint64_t atom1_id,
+                                uint64_t atom2_id);
+
+bool ggml_opencog_happens_simultaneously(struct ggml_opencog_atomspace* atomspace,
+                                        uint64_t atom1_id,
+                                        uint64_t atom2_id,
+                                        int64_t tolerance_ms);
+
+// Temporal inference - derive sequential relationships
+struct ggml_opencog_truth_value ggml_opencog_temporal_induction(
+                                                struct ggml_opencog_truth_value before_link,
+                                                struct ggml_opencog_truth_value after_link);
 
 // CogServer functions
 struct ggml_opencog_cogserver* ggml_opencog_cogserver_new(struct ggml_opencog_atomspace* atomspace);
