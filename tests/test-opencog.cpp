@@ -323,11 +323,82 @@ bool test_attention() {
     return true;
 }
 
+bool test_hebbian_learning() {
+    std::cout << "Testing Hebbian learning... ";
+    
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    struct ggml_opencog_truth_value tv = {0.8f, 0.6f};
+    
+    // Create two concepts
+    uint64_t dog_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Dog", tv, {});
+    uint64_t pet_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Pet", tv, {});
+    
+    auto* dog = ggml_opencog_get_atom(atomspace, dog_id);
+    auto* pet = ggml_opencog_get_atom(atomspace, pet_id);
+    
+    // Compute initial similarity
+    float initial_sim = ggml_opencog_compute_similarity(atomspace, dog_id, pet_id);
+    
+    // Apply Hebbian learning multiple times
+    for (int i = 0; i < 10; i++) {
+        ggml_opencog_hebbian_update(atomspace, dog_id, pet_id, 0.1f);
+    }
+    
+    // Compute final similarity - should be higher
+    float final_sim = ggml_opencog_compute_similarity(atomspace, dog_id, pet_id);
+    
+    if (final_sim <= initial_sim) {
+        std::cout << "FAILED (similarity did not increase: " << initial_sim << " -> " << final_sim << ")\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test normalization
+    ggml_opencog_normalize_embedding(atomspace, dog_id);
+    
+    // Compute embedding norm (should be close to 1.0)
+    float norm = 0.0f;
+    for (size_t i = 0; i < dog->embedding_data.size(); i++) {
+        norm += dog->embedding_data[i] * dog->embedding_data[i];
+    }
+    norm = sqrtf(norm);
+    
+    if (fabsf(norm - 1.0f) > 0.01f) {
+        std::cout << "FAILED (normalization: norm = " << norm << ")\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test link-based Hebbian learning
+    uint64_t cat_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Cat", tv, {});
+    uint64_t mammal_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Mammal", tv, {});
+    
+    uint64_t link_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                                            "Pets", tv, {dog_id, cat_id, mammal_id});
+    
+    float cat_mammal_sim_before = ggml_opencog_compute_similarity(atomspace, cat_id, mammal_id);
+    
+    // Apply Hebbian learning to the link
+    ggml_opencog_hebbian_update_link(atomspace, link_id, 0.1f);
+    
+    float cat_mammal_sim_after = ggml_opencog_compute_similarity(atomspace, cat_id, mammal_id);
+    
+    if (cat_mammal_sim_after <= cat_mammal_sim_before) {
+        std::cout << "FAILED (link learning did not increase similarity)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
 int main() {
     std::cout << "=== OpenCog GGML Tests ===\n\n";
     
     int passed = 0;
-    int total = 9;
+    int total = 10;
     
     if (test_atomspace_creation()) passed++;
     if (test_atom_creation()) passed++;
@@ -338,6 +409,7 @@ int main() {
     if (test_embeddings()) passed++;
     if (test_similarity()) passed++;
     if (test_attention()) passed++;
+    if (test_hebbian_learning()) passed++;
     
     std::cout << "\n=== Results ===\n";
     std::cout << "Passed: " << passed << "/" << total << " tests\n";

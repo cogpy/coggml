@@ -126,6 +126,23 @@ void ggml_opencog_update_attention(struct ggml_opencog_atomspace* atomspace,
                                   float sti_delta,
                                   float lti_delta);
 
+// Hebbian learning for embedding updates
+// Strengthens the embedding connection between two co-activated atoms
+void ggml_opencog_hebbian_update(struct ggml_opencog_atomspace* atomspace,
+                                uint64_t atom1_id,
+                                uint64_t atom2_id,
+                                float learning_rate);
+
+// Apply Hebbian learning to all atoms in a link
+// Updates embeddings based on co-activation patterns
+void ggml_opencog_hebbian_update_link(struct ggml_opencog_atomspace* atomspace,
+                                     uint64_t link_id,
+                                     float learning_rate);
+
+// Normalize embedding vectors to unit length
+void ggml_opencog_normalize_embedding(struct ggml_opencog_atomspace* atomspace,
+                                     uint64_t atom_id);
+
 // CogServer functions
 struct ggml_opencog_cogserver* ggml_opencog_cogserver_new(struct ggml_opencog_atomspace* atomspace);
 void ggml_opencog_cogserver_free(struct ggml_opencog_cogserver* server);

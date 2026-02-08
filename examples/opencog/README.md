@@ -67,6 +67,17 @@ Comprehensive feature demonstration:
 ./bin/opencog-advanced
 ```
 
+### opencog-hebbian
+Hebbian learning demonstration ("Neurons that fire together, wire together"):
+- **Semantic association learning**: Strengthening connections through co-activation
+- **Link-based learning**: Propagating similarity through relationships
+- **Embedding normalization**: Maintaining numerical stability
+- **Multi-concept scenarios**: Learning complex patterns from experience
+
+```bash
+./bin/opencog-hebbian
+```
+
 ## Key Features
 
 ### Tensor-Based Embeddings
@@ -86,6 +97,13 @@ ECAN manages limited cognitive resources:
 - High STI atoms get more processing
 - LTI accumulates over time for important atoms
 - Attention spreads through graph connections
+
+### Hebbian Learning
+Adaptive learning mechanism based on co-activation:
+- **Hebbian principle**: "Neurons that fire together, wire together"
+- **Embedding updates**: Strengthen connections between co-activated atoms
+- **Link propagation**: Learn from structural relationships in the graph
+- **Normalization**: Maintain numerical stability during learning
 
 ## Implementation Details
 
@@ -115,7 +133,7 @@ cmake --build . --target opencog-simple opencog-reasoning opencog-advanced
 ## Future Enhancements
 
 Potential improvements to continue implementation:
-- [ ] Hebbian learning for embedding updates
+- [x] Hebbian learning for embedding updates
 - [ ] Temporal reasoning and event sequences
 - [ ] Goal-directed attention allocation
 - [ ] Pattern mining and concept formation

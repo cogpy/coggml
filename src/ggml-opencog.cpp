@@ -396,6 +396,79 @@ void ggml_opencog_update_attention(struct ggml_opencog_atomspace* atomspace,
     }
 }
 
+// Hebbian learning implementation
+// "Neurons that fire together, wire together" - Donald Hebb
+// When two atoms are co-activated, their embeddings are adjusted to become more similar
+void ggml_opencog_hebbian_update(struct ggml_opencog_atomspace* atomspace,
+                                uint64_t atom1_id,
+                                uint64_t atom2_id,
+                                float learning_rate) {
+    auto* atom1 = ggml_opencog_get_atom(atomspace, atom1_id);
+    auto* atom2 = ggml_opencog_get_atom(atomspace, atom2_id);
+    
+    if (!atom1 || !atom2) return;
+    if (atom1->embedding_data.empty() || atom2->embedding_data.empty()) return;
+    if (atom1->embedding_data.size() != atom2->embedding_data.size()) return;
+    
+    int dim = atom1->embedding_data.size();
+    
+    // Hebbian update: move embeddings closer together
+    // e1' = e1 + lr * (e2 - e1) = e1 + lr * e2 - lr * e1
+    // e2' = e2 + lr * (e1 - e2) = e2 + lr * e1 - lr * e2
+    for (int i = 0; i < dim; i++) {
+        float delta1 = learning_rate * (atom2->embedding_data[i] - atom1->embedding_data[i]);
+        float delta2 = learning_rate * (atom1->embedding_data[i] - atom2->embedding_data[i]);
+        
+        atom1->embedding_data[i] += delta1;
+        atom2->embedding_data[i] += delta2;
+    }
+}
+
+// Apply Hebbian learning to all atoms connected by a link
+// This strengthens the semantic relationships between linked concepts
+void ggml_opencog_hebbian_update_link(struct ggml_opencog_atomspace* atomspace,
+                                     uint64_t link_id,
+                                     float learning_rate) {
+    auto* link = ggml_opencog_get_atom(atomspace, link_id);
+    if (!link) return;
+    
+    // Update embeddings between all pairs of atoms in the outgoing set
+    const auto& outgoing = link->outgoing;
+    for (size_t i = 0; i < outgoing.size(); i++) {
+        for (size_t j = i + 1; j < outgoing.size(); j++) {
+            ggml_opencog_hebbian_update(atomspace, outgoing[i], outgoing[j], learning_rate);
+        }
+        
+        // Also update between link and its targets (with reduced rate)
+        ggml_opencog_hebbian_update(atomspace, link_id, outgoing[i], learning_rate * 0.5f);
+    }
+}
+
+// Normalize an atom's embedding to unit length
+// This is important to maintain numerical stability and consistent similarity scores
+void ggml_opencog_normalize_embedding(struct ggml_opencog_atomspace* atomspace,
+                                     uint64_t atom_id) {
+    auto* atom = ggml_opencog_get_atom(atomspace, atom_id);
+    if (!atom || atom->embedding_data.empty()) return;
+    
+    int dim = atom->embedding_data.size();
+    float norm = 0.0f;
+    
+    // Compute L2 norm
+    for (int i = 0; i < dim; i++) {
+        norm += atom->embedding_data[i] * atom->embedding_data[i];
+    }
+    norm = sqrtf(norm);
+    
+    // Avoid division by zero
+    if (norm < 1e-8f) return;
+    
+    // Normalize to unit length
+    for (int i = 0; i < dim; i++) {
+        atom->embedding_data[i] /= norm;
+    }
+}
+
 // CogServer implementation
 struct ggml_opencog_cogserver* ggml_opencog_cogserver_new(struct ggml_opencog_atomspace* atomspace) {
     auto* server = new ggml_opencog_cogserver();
