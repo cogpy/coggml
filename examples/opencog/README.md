@@ -67,6 +67,29 @@ Comprehensive feature demonstration:
 ./bin/opencog-advanced
 ```
 
+### opencog-hebbian
+Hebbian learning demonstration ("Neurons that fire together, wire together"):
+- **Semantic association learning**: Strengthening connections through co-activation
+- **Link-based learning**: Propagating similarity through relationships
+- **Embedding normalization**: Maintaining numerical stability
+- **Multi-concept scenarios**: Learning complex patterns from experience
+
+```bash
+./bin/opencog-hebbian
+```
+
+### opencog-temporal
+Temporal reasoning and event sequence demonstration:
+- **Time intervals**: Modeling event durations and point events
+- **Temporal ordering**: Before/during/simultaneous relationships
+- **Temporal queries**: Finding events by time
+- **Event sequences**: Causal chains and pattern recognition
+- **Temporal induction**: Inferring sequential relationships
+
+```bash
+./bin/opencog-temporal
+```
+
 ## Key Features
 
 ### Tensor-Based Embeddings
@@ -86,6 +109,21 @@ ECAN manages limited cognitive resources:
 - High STI atoms get more processing
 - LTI accumulates over time for important atoms
 - Attention spreads through graph connections
+
+### Hebbian Learning
+Adaptive learning mechanism based on co-activation:
+- **Hebbian principle**: "Neurons that fire together, wire together"
+- **Embedding updates**: Strengthen connections between co-activated atoms
+- **Link propagation**: Learn from structural relationships in the graph
+- **Normalization**: Maintain numerical stability during learning
+
+### Temporal Reasoning
+Reason about events and their timing:
+- **Time intervals**: Represent event durations and point-in-time occurrences
+- **Temporal relations**: Before, during, and simultaneous relationships
+- **Temporal queries**: Find events by time or interval
+- **Sequential inference**: Derive causal chains through temporal induction
+- **Event patterns**: Recognize sequences and routines
 
 ## Implementation Details
 
@@ -109,14 +147,14 @@ ECAN manages limited cognitive resources:
 ```bash
 mkdir build && cd build
 cmake ..
-cmake --build . --target opencog-simple opencog-reasoning opencog-advanced
+cmake --build . --target opencog-simple opencog-reasoning opencog-advanced opencog-hebbian opencog-temporal
 ```
 
 ## Future Enhancements
 
 Potential improvements to continue implementation:
-- [ ] Hebbian learning for embedding updates
-- [ ] Temporal reasoning and event sequences
+- [x] Hebbian learning for embedding updates
+- [x] Temporal reasoning and event sequences
 - [ ] Goal-directed attention allocation
 - [ ] Pattern mining and concept formation
 - [ ] Integration with neural networks

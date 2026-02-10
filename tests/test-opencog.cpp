@@ -323,11 +323,176 @@ bool test_attention() {
     return true;
 }
 
+bool test_hebbian_learning() {
+    std::cout << "Testing Hebbian learning... ";
+    
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    struct ggml_opencog_truth_value tv = {0.8f, 0.6f};
+    
+    // Create two concepts
+    uint64_t dog_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Dog", tv, {});
+    uint64_t pet_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Pet", tv, {});
+    
+    auto* dog = ggml_opencog_get_atom(atomspace, dog_id);
+    auto* pet = ggml_opencog_get_atom(atomspace, pet_id);
+    
+    // Compute initial similarity
+    float initial_sim = ggml_opencog_compute_similarity(atomspace, dog_id, pet_id);
+    
+    // Apply Hebbian learning multiple times
+    for (int i = 0; i < 10; i++) {
+        ggml_opencog_hebbian_update(atomspace, dog_id, pet_id, 0.1f);
+    }
+    
+    // Compute final similarity - should be higher
+    float final_sim = ggml_opencog_compute_similarity(atomspace, dog_id, pet_id);
+    
+    if (final_sim <= initial_sim) {
+        std::cout << "FAILED (similarity did not increase: " << initial_sim << " -> " << final_sim << ")\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test normalization
+    ggml_opencog_normalize_embedding(atomspace, dog_id);
+    
+    // Compute embedding norm (should be close to 1.0)
+    float norm = 0.0f;
+    for (size_t i = 0; i < dog->embedding_data.size(); i++) {
+        norm += dog->embedding_data[i] * dog->embedding_data[i];
+    }
+    norm = sqrtf(norm);
+    
+    if (fabsf(norm - 1.0f) > 0.01f) {
+        std::cout << "FAILED (normalization: norm = " << norm << ")\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test link-based Hebbian learning
+    uint64_t cat_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Cat", tv, {});
+    uint64_t mammal_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Mammal", tv, {});
+    
+    uint64_t link_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                                            "Pets", tv, {dog_id, cat_id, mammal_id});
+    
+    float cat_mammal_sim_before = ggml_opencog_compute_similarity(atomspace, cat_id, mammal_id);
+    
+    // Apply Hebbian learning to the link
+    ggml_opencog_hebbian_update_link(atomspace, link_id, 0.1f);
+    
+    float cat_mammal_sim_after = ggml_opencog_compute_similarity(atomspace, cat_id, mammal_id);
+    
+    if (cat_mammal_sim_after <= cat_mammal_sim_before) {
+        std::cout << "FAILED (link learning did not increase similarity)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_temporal_reasoning() {
+    std::cout << "Testing temporal reasoning... ";
+    
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    struct ggml_opencog_truth_value tv = {0.9f, 0.8f};
+    
+    // Create events
+    uint64_t wake_up_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "WakeUp", tv, {});
+    uint64_t breakfast_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Breakfast", tv, {});
+    uint64_t work_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Work", tv, {});
+    
+    // Set time intervals (using milliseconds since epoch)
+    // WakeUp: 7:00-7:30 (time 1000-3000)
+    ggml_opencog_set_time_interval(atomspace, wake_up_id, 1000, 3000);
+    
+    // Breakfast: 7:30-8:00 (time 3000-5000)
+    ggml_opencog_set_time_interval(atomspace, breakfast_id, 3000, 5000);
+    
+    // Work: 9:00-17:00 (time 7000-15000)
+    ggml_opencog_set_time_interval(atomspace, work_id, 7000, 15000);
+    
+    // Test: WakeUp happens before Breakfast
+    if (!ggml_opencog_happens_before(atomspace, wake_up_id, breakfast_id)) {
+        std::cout << "FAILED (WakeUp should happen before Breakfast)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test: Breakfast happens before Work
+    if (!ggml_opencog_happens_before(atomspace, breakfast_id, work_id)) {
+        std::cout << "FAILED (Breakfast should happen before Work)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test: Work doesn't happen before Breakfast
+    if (ggml_opencog_happens_before(atomspace, work_id, breakfast_id)) {
+        std::cout << "FAILED (Work should not happen before Breakfast)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test: Query atoms at specific time
+    auto atoms_at_time = ggml_opencog_get_atoms_at_time(atomspace, 4000);
+    if (atoms_at_time.size() != 1 || atoms_at_time[0] != breakfast_id) {
+        std::cout << "FAILED (should find Breakfast at time 4000)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test: Query atoms in interval
+    auto atoms_in_interval = ggml_opencog_get_atoms_in_interval(atomspace, 2000, 8000);
+    if (atoms_in_interval.size() != 3) {
+        std::cout << "FAILED (should find 3 atoms in interval 2000-8000)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test: Simultaneity
+    uint64_t lunch_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Lunch", tv, {});
+    ggml_opencog_set_time_interval(atomspace, lunch_id, 10000, 11000);
+    
+    // Lunch happens during Work
+    if (!ggml_opencog_happens_during(atomspace, lunch_id, work_id)) {
+        std::cout << "FAILED (Lunch should happen during Work)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Test: Temporal induction
+    struct ggml_opencog_truth_value tv_link1 = {0.9f, 0.8f};
+    struct ggml_opencog_truth_value tv_link2 = {0.85f, 0.75f};
+    
+    struct ggml_opencog_truth_value result = ggml_opencog_temporal_induction(tv_link1, tv_link2);
+    
+    // Result strength should be minimum of inputs
+    if (result.strength > 0.85f || result.strength < 0.84f) {
+        std::cout << "FAILED (temporal induction strength)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    // Result confidence should be reduced
+    if (result.confidence >= tv_link1.confidence * tv_link2.confidence) {
+        std::cout << "FAILED (temporal induction confidence should be reduced)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
 int main() {
     std::cout << "=== OpenCog GGML Tests ===\n\n";
     
     int passed = 0;
-    int total = 9;
+    int total = 11;
     
     if (test_atomspace_creation()) passed++;
     if (test_atom_creation()) passed++;
@@ -338,6 +503,8 @@ int main() {
     if (test_embeddings()) passed++;
     if (test_similarity()) passed++;
     if (test_attention()) passed++;
+    if (test_hebbian_learning()) passed++;
+    if (test_temporal_reasoning()) passed++;
     
     std::cout << "\n=== Results ===\n";
     std::cout << "Passed: " << passed << "/" << total << " tests\n";

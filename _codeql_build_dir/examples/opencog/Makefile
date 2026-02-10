@@ -216,6 +216,34 @@ opencog-advanced/fast:
 	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-advanced.dir/build.make examples/opencog/CMakeFiles/opencog-advanced.dir/build
 .PHONY : opencog-advanced/fast
 
+# Convenience name for target.
+examples/opencog/CMakeFiles/opencog-hebbian.dir/rule:
+	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/opencog/CMakeFiles/opencog-hebbian.dir/rule
+.PHONY : examples/opencog/CMakeFiles/opencog-hebbian.dir/rule
+
+# Convenience name for target.
+opencog-hebbian: examples/opencog/CMakeFiles/opencog-hebbian.dir/rule
+.PHONY : opencog-hebbian
+
+# fast build rule for target.
+opencog-hebbian/fast:
+	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-hebbian.dir/build.make examples/opencog/CMakeFiles/opencog-hebbian.dir/build
+.PHONY : opencog-hebbian/fast
+
+# Convenience name for target.
+examples/opencog/CMakeFiles/opencog-temporal.dir/rule:
+	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/opencog/CMakeFiles/opencog-temporal.dir/rule
+.PHONY : examples/opencog/CMakeFiles/opencog-temporal.dir/rule
+
+# Convenience name for target.
+opencog-temporal: examples/opencog/CMakeFiles/opencog-temporal.dir/rule
+.PHONY : opencog-temporal
+
+# fast build rule for target.
+opencog-temporal/fast:
+	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-temporal.dir/build.make examples/opencog/CMakeFiles/opencog-temporal.dir/build
+.PHONY : opencog-temporal/fast
+
 advanced_features.o: advanced_features.cpp.o
 .PHONY : advanced_features.o
 
@@ -239,6 +267,30 @@ advanced_features.s: advanced_features.cpp.s
 advanced_features.cpp.s:
 	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-advanced.dir/build.make examples/opencog/CMakeFiles/opencog-advanced.dir/advanced_features.cpp.s
 .PHONY : advanced_features.cpp.s
+
+hebbian_learning.o: hebbian_learning.cpp.o
+.PHONY : hebbian_learning.o
+
+# target to build an object file
+hebbian_learning.cpp.o:
+	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-hebbian.dir/build.make examples/opencog/CMakeFiles/opencog-hebbian.dir/hebbian_learning.cpp.o
+.PHONY : hebbian_learning.cpp.o
+
+hebbian_learning.i: hebbian_learning.cpp.i
+.PHONY : hebbian_learning.i
+
+# target to preprocess a source file
+hebbian_learning.cpp.i:
+	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-hebbian.dir/build.make examples/opencog/CMakeFiles/opencog-hebbian.dir/hebbian_learning.cpp.i
+.PHONY : hebbian_learning.cpp.i
+
+hebbian_learning.s: hebbian_learning.cpp.s
+.PHONY : hebbian_learning.s
+
+# target to generate assembly for a file
+hebbian_learning.cpp.s:
+	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-hebbian.dir/build.make examples/opencog/CMakeFiles/opencog-hebbian.dir/hebbian_learning.cpp.s
+.PHONY : hebbian_learning.cpp.s
 
 main.o: main.cpp.o
 .PHONY : main.o
@@ -288,6 +340,30 @@ reasoning_example.cpp.s:
 	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-reasoning.dir/build.make examples/opencog/CMakeFiles/opencog-reasoning.dir/reasoning_example.cpp.s
 .PHONY : reasoning_example.cpp.s
 
+temporal_reasoning.o: temporal_reasoning.cpp.o
+.PHONY : temporal_reasoning.o
+
+# target to build an object file
+temporal_reasoning.cpp.o:
+	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-temporal.dir/build.make examples/opencog/CMakeFiles/opencog-temporal.dir/temporal_reasoning.cpp.o
+.PHONY : temporal_reasoning.cpp.o
+
+temporal_reasoning.i: temporal_reasoning.cpp.i
+.PHONY : temporal_reasoning.i
+
+# target to preprocess a source file
+temporal_reasoning.cpp.i:
+	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-temporal.dir/build.make examples/opencog/CMakeFiles/opencog-temporal.dir/temporal_reasoning.cpp.i
+.PHONY : temporal_reasoning.cpp.i
+
+temporal_reasoning.s: temporal_reasoning.cpp.s
+.PHONY : temporal_reasoning.s
+
+# target to generate assembly for a file
+temporal_reasoning.cpp.s:
+	cd /home/runner/work/coggml/coggml/_codeql_build_dir && $(MAKE) $(MAKESILENT) -f examples/opencog/CMakeFiles/opencog-temporal.dir/build.make examples/opencog/CMakeFiles/opencog-temporal.dir/temporal_reasoning.cpp.s
+.PHONY : temporal_reasoning.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -302,17 +378,25 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... opencog-advanced"
+	@echo "... opencog-hebbian"
 	@echo "... opencog-reasoning"
 	@echo "... opencog-simple"
+	@echo "... opencog-temporal"
 	@echo "... advanced_features.o"
 	@echo "... advanced_features.i"
 	@echo "... advanced_features.s"
+	@echo "... hebbian_learning.o"
+	@echo "... hebbian_learning.i"
+	@echo "... hebbian_learning.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
 	@echo "... reasoning_example.o"
 	@echo "... reasoning_example.i"
 	@echo "... reasoning_example.s"
+	@echo "... temporal_reasoning.o"
+	@echo "... temporal_reasoning.i"
+	@echo "... temporal_reasoning.s"
 .PHONY : help
 
 
