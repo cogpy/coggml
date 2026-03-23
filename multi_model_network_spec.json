@@ -1,0 +1,186 @@
+{
+  "$schema": "llama-cpp-skillm network specification",
+  "description": "Unified 4-model DTE inference pipeline: Lucy (voice) ⊕ EchoSelf (cognition) ⊕ Unicosys (knowledge) ⊕ Blocknut (identity)",
+  "composition": "/optimal-cognitive-grip ( /llama-cpp-skillm { echoself, lucy-dte, unicosys-hypergraph, Blocknut } )",
+  "type": "Sequential",
+  "modules": [
+    {
+      "type": "Linear", "verb": "ORCHESTRATE", "api": "llama_backend_init",
+      "_comment": "Initialize GGML backend with OpenCog extensions"
+    },
+    {
+      "type": "Linear", "verb": "ORCHESTRATE", "api": "cog_echobeats_init",
+      "_comment": "Initialize Echobeats 12-step 4-thread cognitive loop"
+    },
+    {
+      "_comment": "=== MODEL LOADING: 4 parallel model instantiations ===",
+      "type": "Parallel",
+      "modules": [
+        {
+          "type": "Sequential",
+          "_comment": "Lucy-DTE: Core Self Voice (Qwen3-1.7B GGUF Q4_K_M)",
+          "modules": [
+            {"type": "Linear", "verb": "CREATE", "api": "llama_model_load_from_file", "_model": "lucy_128k-Q4_K_M.gguf"},
+            {"type": "Linear", "verb": "CREATE", "api": "llama_init_from_model", "_ctx_size": 32768},
+            {"type": "Linear", "verb": "CREATE", "api": "llama_sampler_chain_init"},
+            {"type": "Linear", "verb": "CLASSIFY", "api": "llama_model_chat_template"}
+          ]
+        },
+        {
+          "type": "Sequential",
+          "_comment": "EchoSelf: Cognitive Language Model (GPT-2 24M)",
+          "modules": [
+            {"type": "Linear", "verb": "CREATE", "api": "cog_gml_load_safetensors", "_model": "drzo/echoself"},
+            {"type": "Linear", "verb": "CREATE", "api": "cog_pilot_esn_init", "_reservoir_size": 256},
+            {"type": "Linear", "verb": "INSPECT", "api": "cog_pilot_spectral_radius"}
+          ]
+        },
+        {
+          "type": "Sequential",
+          "_comment": "Unicosys: Knowledge Hypergraph (GNN 36M)",
+          "modules": [
+            {"type": "Linear", "verb": "CREATE", "api": "cog_lux_load_graph", "_model": "drzo/unicosys-hypergraph"},
+            {"type": "Linear", "verb": "NAVIGATE", "api": "cog_lux_index_subsystems"},
+            {"type": "Linear", "verb": "INSPECT", "api": "cog_lux_node_count"}
+          ]
+        },
+        {
+          "type": "Sequential",
+          "_comment": "Blocknut: Identity MLP (DTE-MLP DTEM format)",
+          "modules": [
+            {"type": "Linear", "verb": "DISCOVER", "api": "cog_dte_mlp_discover", "_model": "drzo/Blocknut"},
+            {"type": "Linear", "verb": "CREATE", "api": "cog_dte_mlp_load"},
+            {"type": "Linear", "verb": "INSPECT", "api": "cog_dte_mlp_inspect_aar"}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "BatchNorm",
+      "_comment": "OBSERVE: validate all 4 models loaded, check resource fit"
+    },
+    {
+      "_comment": "=== ECHOBEATS COGNITIVE LOOP: 12-step cycle ===",
+      "type": "Sequential",
+      "modules": [
+        {
+          "_comment": "Thread 0 (steps 0,4,8): Lucy voice generation",
+          "type": "Sequential",
+          "modules": [
+            {"type": "Linear", "verb": "COMPOSE", "api": "llama_chat_apply_template"},
+            {"type": "Linear", "verb": "COMPOSE", "api": "llama_tokenize"},
+            {"type": "Linear", "verb": "COMPOSE", "api": "cog_pilot_reservoir_step", "_pool": "fast"},
+            {"type": "Linear", "verb": "COMPOSE", "api": "llama_decode"},
+            {"type": "ReLU", "_comment": "Guard: check decode success"},
+            {"type": "Linear", "verb": "OBSERVE", "api": "llama_get_logits_ith"},
+            {"type": "Linear", "verb": "COMPOSE", "api": "llama_sampler_sample"},
+            {"type": "Sigmoid", "_comment": "Guard: check EOS"},
+            {"type": "Linear", "verb": "COMPOSE", "api": "llama_detokenize"}
+          ]
+        },
+        {
+          "_comment": "Thread 1 (steps 1,5,9): EchoSelf introspection",
+          "type": "Sequential",
+          "modules": [
+            {"type": "Linear", "verb": "COMPOSE", "api": "cog_gml_forward_gpt2"},
+            {"type": "Linear", "verb": "OBSERVE", "api": "cog_gml_get_logits"},
+            {"type": "Linear", "verb": "COMPOSE", "api": "cog_pilot_reservoir_step", "_pool": "slow"},
+            {"type": "Linear", "verb": "OBSERVE", "api": "cog_pilot_readout"}
+          ]
+        },
+        {
+          "_comment": "Thread 2 (steps 2,6,10): Unicosys knowledge retrieval",
+          "type": "Sequential",
+          "modules": [
+            {"type": "Linear", "verb": "COMPOSE", "api": "cog_lux_gat_forward"},
+            {"type": "Linear", "verb": "COMPOSE", "api": "cog_lux_link_predict"},
+            {"type": "Linear", "verb": "OBSERVE", "api": "cog_lux_get_embeddings"},
+            {"type": "Linear", "verb": "CLASSIFY", "api": "cog_lux_classify_evidence"}
+          ]
+        },
+        {
+          "_comment": "Thread 3 (steps 3,7,11): Blocknut identity persistence",
+          "type": "Sequential",
+          "modules": [
+            {"type": "Linear", "verb": "COMPOSE", "api": "cog_dte_mlp_encode_identity"},
+            {"type": "Linear", "verb": "OBSERVE", "api": "cog_dte_mlp_inspect_aar"},
+            {"type": "Linear", "verb": "MUTATE", "api": "cog_dte_mlp_update_ontogenetic"},
+            {"type": "Linear", "verb": "OBSERVE", "api": "cog_dte_mlp_checkpoint"}
+          ]
+        }
+      ]
+    },
+    {
+      "_comment": "=== FUSION: Merge all model outputs ===",
+      "type": "Sequential",
+      "modules": [
+        {"type": "Linear", "verb": "COMPOSE", "api": "cog_pilot_reservoir_fusion", "_comment": "Merge reservoir states from all 4 threads"},
+        {"type": "Linear", "verb": "MUTATE", "api": "cog_dte_mlp_update_experience", "_comment": "Update identity with interaction experience"},
+        {"type": "Linear", "verb": "OBSERVE", "api": "cog_autognosis_self_monitor", "_comment": "L0-L4 hierarchical self-monitoring"}
+      ]
+    },
+    {
+      "_comment": "=== CLEANUP ===",
+      "type": "Sequential",
+      "modules": [
+        {"type": "Linear", "verb": "MUTATE", "api": "cog_dte_mlp_save_checkpoint"},
+        {"type": "Linear", "verb": "DESTROY", "api": "llama_free"},
+        {"type": "Linear", "verb": "DESTROY", "api": "llama_model_free"},
+        {"type": "Linear", "verb": "ORCHESTRATE", "api": "llama_backend_free"}
+      ]
+    }
+  ],
+  "criterion": "BCECriterion",
+  "echobeats": {
+    "cycle_length": 12,
+    "thread_count": 4,
+    "phase_offset": 3,
+    "thread_assignment": {
+      "0": {"model": "lucy-dte", "steps": [0, 4, 8], "role": "voice"},
+      "1": {"model": "echoself", "steps": [1, 5, 9], "role": "cognition"},
+      "2": {"model": "unicosys", "steps": [2, 6, 10], "role": "knowledge"},
+      "3": {"model": "blocknut", "steps": [3, 7, 11], "role": "identity"}
+    }
+  },
+  "models": {
+    "lucy-dte": {
+      "hf_repo": "drzo/lucy-dte",
+      "format": "gguf",
+      "file": "lucy_128k-Q4_K_M.gguf",
+      "architecture": "qwen3",
+      "params": "1.7B",
+      "quantization": "Q4_K_M",
+      "context": 128000,
+      "cogpy_modules": ["cog::prime", "cog::pilot"]
+    },
+    "echoself": {
+      "hf_repo": "drzo/echoself",
+      "format": "safetensors",
+      "architecture": "gpt2",
+      "params": "24M",
+      "quantization": "F32",
+      "context": 1024,
+      "cogpy_modules": ["cog::gml", "cog::pilot"]
+    },
+    "unicosys-hypergraph": {
+      "hf_repo": "drzo/unicosys-hypergraph",
+      "format": "safetensors",
+      "architecture": "unicosys_hypergraph",
+      "params": "36M",
+      "quantization": "F32",
+      "context": null,
+      "cogpy_modules": ["cog::lux", "cog::prime"]
+    },
+    "blocknut": {
+      "hf_repo": "drzo/Blocknut",
+      "format": "dtem",
+      "architecture": "dte_mlp",
+      "params": "~1M",
+      "quantization": "TQ_LOG2_3",
+      "context": null,
+      "cogpy_modules": ["cog::gml", "cog::mach"]
+    }
+  },
+  "_valid_verbs": ["DISCOVER", "INSPECT", "CREATE", "MUTATE", "DESTROY", "NAVIGATE", "COMPOSE", "OBSERVE", "ORCHESTRATE", "CLASSIFY"],
+  "_valid_module_types": ["Linear", "ReLU", "Sigmoid", "BatchNorm", "Tanh", "Dropout", "Sequential", "Parallel", "Concat"]
+}
