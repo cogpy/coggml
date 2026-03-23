@@ -38,3 +38,5 @@ __pycache__/
 ggml-model-f16.bin
 *.bat
 _codeql_build_dir/
+test/test_multi_model
+test/test_tq_log2_3
