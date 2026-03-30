@@ -12,6 +12,7 @@
 //   cog::gml    — Tensor library for ML (quantization, auto-diff, optimizers)
 //   cog::prime  — AGI architecture (cognitive cycle, ontogenesis, memory systems)
 //   cog::webvm  — Web AtomSpace VM (Scheme REPL, JSON serialization)
+//   cog::fowler — Thomas Fowler's 1840 balanced ternary calculating machine
 //
 #ifndef COG_HPP
 #define COG_HPP
@@ -25,5 +26,6 @@
 #include "gml/gml.hpp"
 #include "prime/prime.hpp"
 #include "webvm/webvm.hpp"
+#include "fowler/machine.hpp"
 
 #endif // COG_HPP

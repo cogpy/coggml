@@ -825,6 +825,207 @@ void test_webvm() {
     });
 }
 
+// ─── cog::fowler ──────────────────────────────────────────────────────────────
+
+void test_fowler() {
+    section("cog::fowler");
+
+    // ── BalancedTernary: construction and conversion ──────────────────────────
+
+    TEST(bt_zero, {
+        cog::fowler::BalancedTernary z;
+        REQUIRE(z.is_zero());
+        REQUIRE(z.to_int() == 0);
+        REQUIRE(z.to_string() == "0");
+    });
+
+    TEST(bt_from_int_positive, {
+        cog::fowler::BalancedTernary bt(7);
+        REQUIRE(bt.to_int() == 7);
+        // 7 = 9 - 3 + 1 = 1*9 + T*3 + 1*1 → "1T1"
+        REQUIRE(bt.to_string() == "1T1");
+    });
+
+    TEST(bt_from_int_negative, {
+        cog::fowler::BalancedTernary bt(-7);
+        REQUIRE(bt.to_int() == -7);
+        // -7 is negation of 7="1T1" → "T1T"
+        REQUIRE(bt.to_string() == "T1T");
+    });
+
+    TEST(bt_from_string, {
+        cog::fowler::BalancedTernary bt("1T01");
+        // 1T01 (MSB first): 1*27 + (-1)*9 + 0*3 + 1*1 = 27-9+0+1 = 19
+        REQUIRE(bt.to_int() == 19);
+    });
+
+    TEST(bt_roundtrip, {
+        for (int64_t v : {-100, -13, -1, 0, 1, 13, 100, 364}) {
+            cog::fowler::BalancedTernary bt(v);
+            REQUIRE(bt.to_int() == v);
+        }
+    });
+
+    // ── BalancedTernary: arithmetic ───────────────────────────────────────────
+
+    TEST(bt_negation, {
+        cog::fowler::BalancedTernary a(5);
+        cog::fowler::BalancedTernary b = -a;
+        REQUIRE(b.to_int() == -5);
+        REQUIRE((-b).to_int() == 5);
+    });
+
+    TEST(bt_addition, {
+        REQUIRE((cog::fowler::BalancedTernary(3) + cog::fowler::BalancedTernary(4)).to_int() == 7);
+        REQUIRE((cog::fowler::BalancedTernary(-3) + cog::fowler::BalancedTernary(3)).is_zero());
+        REQUIRE((cog::fowler::BalancedTernary(13) + cog::fowler::BalancedTernary(-5)).to_int() == 8);
+    });
+
+    TEST(bt_subtraction, {
+        REQUIRE((cog::fowler::BalancedTernary(10) - cog::fowler::BalancedTernary(3)).to_int() == 7);
+        REQUIRE((cog::fowler::BalancedTernary(0) - cog::fowler::BalancedTernary(1)).to_int() == -1);
+    });
+
+    TEST(bt_multiply_by_trit, {
+        cog::fowler::BalancedTernary bt(5);
+        REQUIRE(bt.multiply_by_trit(cog::fowler::TRIT_POS).to_int() == 5);
+        REQUIRE(bt.multiply_by_trit(cog::fowler::TRIT_ZERO).is_zero());
+        REQUIRE(bt.multiply_by_trit(cog::fowler::TRIT_NEG).to_int() == -5);
+    });
+
+    TEST(bt_multiplication, {
+        REQUIRE((cog::fowler::BalancedTernary(3) * cog::fowler::BalancedTernary(4)).to_int() == 12);
+        REQUIRE((cog::fowler::BalancedTernary(-3) * cog::fowler::BalancedTernary(4)).to_int() == -12);
+        REQUIRE((cog::fowler::BalancedTernary(7) * cog::fowler::BalancedTernary(7)).to_int() == 49);
+        REQUIRE((cog::fowler::BalancedTernary(0) * cog::fowler::BalancedTernary(99)).is_zero());
+    });
+
+    TEST(bt_shift_left, {
+        cog::fowler::BalancedTernary bt(2);
+        // shift_left(1) = 2 * 3^1 = 6
+        REQUIRE(bt.shift_left(1).to_int() == 6);
+        // shift_left(3) = 2 * 3^3 = 54
+        REQUIRE(bt.shift_left(3).to_int() == 54);
+        // shift_left(0) = unchanged
+        REQUIRE(bt.shift_left(0).to_int() == 2);
+    });
+
+    TEST(bt_division, {
+        cog::fowler::BalancedTernary rem;
+        cog::fowler::BalancedTernary q = cog::fowler::BalancedTernary(12).divmod(
+            cog::fowler::BalancedTernary(3), rem);
+        REQUIRE(q.to_int() == 4);
+        REQUIRE(rem.is_zero());
+    });
+
+    TEST(bt_division_with_remainder, {
+        cog::fowler::BalancedTernary rem;
+        cog::fowler::BalancedTernary q = cog::fowler::BalancedTernary(13).divmod(
+            cog::fowler::BalancedTernary(5), rem);
+        // 13 = 5*2 + 3  or  13 = 5*3 + (-2); choose closest remainder → q=3, r=-2
+        REQUIRE(q.to_int() * 5 + rem.to_int() == 13);
+    });
+
+    TEST(bt_comparison, {
+        cog::fowler::BalancedTernary a(5), b(3), c(5);
+        REQUIRE(a > b);
+        REQUIRE(b < a);
+        REQUIRE(a == c);
+        REQUIRE(a != b);
+        REQUIRE(a >= c);
+        REQUIRE(b <= a);
+    });
+
+    // ── FowlerMachine: multiply ───────────────────────────────────────────────
+
+    TEST(machine_multiply_basic, {
+        cog::fowler::FowlerMachine m;
+        auto result = m.multiply(cog::fowler::BalancedTernary(3),
+                                 cog::fowler::BalancedTernary(4));
+        REQUIRE(result.to_int() == 12);
+        REQUIRE(!m.get_log().empty());
+    });
+
+    TEST(machine_multiply_negatives, {
+        cog::fowler::FowlerMachine m;
+        auto r1 = m.multiply(cog::fowler::BalancedTernary(-3),
+                              cog::fowler::BalancedTernary(4));
+        REQUIRE(r1.to_int() == -12);
+
+        auto r2 = m.multiply(cog::fowler::BalancedTernary(-5),
+                              cog::fowler::BalancedTernary(-7));
+        REQUIRE(r2.to_int() == 35);
+    });
+
+    TEST(machine_multiply_by_zero, {
+        cog::fowler::FowlerMachine m;
+        auto result = m.multiply(cog::fowler::BalancedTernary(42),
+                                 cog::fowler::BalancedTernary(0));
+        REQUIRE(result.is_zero());
+    });
+
+    TEST(machine_multiply_larger, {
+        cog::fowler::FowlerMachine m;
+        // 13 × 7 = 91
+        auto result = m.multiply(cog::fowler::BalancedTernary(13),
+                                 cog::fowler::BalancedTernary(7));
+        REQUIRE(result.to_int() == 91);
+    });
+
+    TEST(machine_event_log, {
+        cog::fowler::FowlerMachine m;
+        m.multiply(cog::fowler::BalancedTernary(5), cog::fowler::BalancedTernary(3));
+        const auto& log = m.get_log();
+        // Log must start with SET_MULTIPLICAND and SET_MULTIPLIER events
+        REQUIRE(log.size() >= 2);
+        REQUIRE(log[0].type == cog::fowler::MachineEventType::SET_MULTIPLICAND);
+        REQUIRE(log[1].type == cog::fowler::MachineEventType::SET_MULTIPLIER);
+        // Last event must be MULTIPLICATION_DONE
+        REQUIRE(log.back().type == cog::fowler::MachineEventType::MULTIPLICATION_DONE);
+    });
+
+    // ── FowlerMachine: divide ─────────────────────────────────────────────────
+
+    TEST(machine_divide_exact, {
+        cog::fowler::FowlerMachine m;
+        auto result = m.divide(cog::fowler::BalancedTernary(12),
+                               cog::fowler::BalancedTernary(3));
+        REQUIRE(result.to_int() == 4);
+    });
+
+    TEST(machine_divide_negative, {
+        cog::fowler::FowlerMachine m;
+        auto result = m.divide(cog::fowler::BalancedTernary(-12),
+                               cog::fowler::BalancedTernary(4));
+        REQUIRE(result.to_int() == -3);
+    });
+
+    // ── carry_normalize ───────────────────────────────────────────────────────
+
+    TEST(carry_normalize, {
+        // Raw: [2, 0, 0] = 2*1 = 2 (unnormalized: digit > 1)
+        // After normalization: 2 = 3*1 - 1 → digit=-1, carry=1 → [-1, 1]
+        std::vector<int> raw = {2, 0, 0};
+        auto norm = cog::fowler::carry_normalize(raw);
+        int64_t val = 0;
+        int64_t pw = 1;
+        for (int v : norm) { val += v * pw; pw *= 3; }
+        REQUIRE(val == 2);
+        for (int v : norm) { REQUIRE(v >= -1); REQUIRE(v <= 1); }
+    });
+
+    TEST(carry_normalize_negative, {
+        // Raw: [-2, 0] → should normalize to [1, -1] (1 - 3 = -2)
+        std::vector<int> raw = {-2, 0};
+        auto norm = cog::fowler::carry_normalize(raw);
+        int64_t val = 0;
+        int64_t pw = 1;
+        for (int v : norm) { val += v * pw; pw *= 3; }
+        REQUIRE(val == -2);
+        for (int v : norm) { REQUIRE(v >= -1); REQUIRE(v <= 1); }
+    });
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 int main() {
@@ -839,6 +1040,7 @@ int main() {
     test_gml();
     test_prime();
     test_webvm();
+    test_fowler();
 
     std::cout << "\n=== Results: " << tests_passed << " passed, "
               << tests_failed << " failed ===\n";

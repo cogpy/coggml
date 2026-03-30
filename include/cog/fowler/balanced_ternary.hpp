@@ -355,9 +355,9 @@ public:
         BalancedTernary rem;
 
         for (int i = static_cast<int>(n) - 1; i >= 0; --i) {
-            // Shift remainder left and add next trit
+            // Shift remainder left and set the next dividend trit at position 0
             rem = rem.shift_left(1);
-            rem.trits[0] = dividend_abs.trits[i];
+            rem.set_trit(0, dividend_abs.trits[i]);
             rem.normalize();
 
             // Try each trit value {+1, 0, -1} for this quotient position

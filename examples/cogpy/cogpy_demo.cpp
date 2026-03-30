@@ -408,6 +408,52 @@ void demo_webvm() {
     std::cout << "\n  ✓ Scheme REPL with arithmetic, defines, lists, JSON working\n";
 }
 
+// ─── cog::fowler — Balanced Ternary Calculating Machine ──────────────────────
+
+void demo_fowler() {
+    banner("cog::fowler — Thomas Fowler's Ternary Machine (1840)");
+
+    section("Balanced Ternary Arithmetic");
+
+    // Construct from integers and show balanced ternary representation
+    cog::fowler::BalancedTernary a(13), b(7);
+    std::cout << "  13 in balanced ternary: " << a.to_string() << "\n";
+    std::cout << "   7 in balanced ternary: " << b.to_string() << "\n";
+    std::cout << "  13 + 7 = " << (a + b).to_int()
+              << "  (" << (a + b).to_string() << ")\n";
+    std::cout << "  13 - 7 = " << (a - b).to_int()
+              << "  (" << (a - b).to_string() << ")\n";
+    std::cout << "  13 × 7 = " << (a * b).to_int()
+              << "  (" << (a * b).to_string() << ")\n";
+
+    cog::fowler::BalancedTernary rem;
+    cog::fowler::BalancedTernary q = a.divmod(b, rem);
+    std::cout << "  13 ÷ 7 = " << q.to_int()
+              << " remainder " << rem.to_int() << "\n";
+
+    section("FowlerMachine — Step-by-Step Mechanical Multiplication");
+
+    cog::fowler::FowlerMachine machine;
+
+    // 5 × 3 = 15
+    auto result = machine.multiply(cog::fowler::BalancedTernary(5),
+                                   cog::fowler::BalancedTernary(3));
+    std::cout << "\n  5 × 3 = " << result.to_int()
+              << " (" << result.to_string() << ")\n";
+    std::cout << "\n" << machine.visualize() << "\n";
+    std::cout << "\n  Event log (" << machine.get_log().size() << " steps):\n";
+    std::cout << machine.format_log();
+
+    section("FowlerMachine — Division");
+
+    auto quot = machine.divide(cog::fowler::BalancedTernary(91),
+                               cog::fowler::BalancedTernary(7));
+    std::cout << "  91 ÷ 7 = " << quot.to_int()
+              << " (" << quot.to_string() << ")\n";
+
+    std::cout << "\n  ✓ Fowler balanced ternary machine: arithmetic and simulation working\n";
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 int main() {
@@ -424,9 +470,10 @@ int main() {
     demo_gml();
     demo_prime();
     demo_webvm();
+    demo_fowler();
 
     std::cout << "\n╔══════════════════════════════════════════════════════╗\n";
-    std::cout << "║  All 9 modules demonstrated successfully!            ║\n";
+    std::cout << "║  All 10 modules demonstrated successfully!           ║\n";
     std::cout << "╚══════════════════════════════════════════════════════╝\n\n";
     return 0;
 }
