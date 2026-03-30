@@ -42,3 +42,20 @@ jobs:
       run: |
         cd build
         ctest --output-on-failure
+
+  test-python:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: pip install numpy
+
+    - name: Run dte_nodes unit tests
+      run: python tests/test_dte_nodes.py -v

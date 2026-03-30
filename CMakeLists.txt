@@ -29,5 +29,8 @@ add_test(NAME cogpy_tests       COMMAND test_all)
 add_test(NAME tq_log2_3_tests   COMMAND test_tq_log2_3)
 add_test(NAME multi_model_tests COMMAND test_multi_model)
 
+# CogPy demo (all 9 modules)
+add_subdirectory(examples/cogpy)
+
 # Install headers
 install(DIRECTORY include/cog DESTINATION include)
