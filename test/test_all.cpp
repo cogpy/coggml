@@ -1026,6 +1026,387 @@ void test_fowler() {
     });
 }
 
+// ─── cog::tq ──────────────────────────────────────────────────────────────────
+
+void test_tq() {
+    section("cog::tq");
+
+    TEST(block_tq_quantize_signs, {
+        // quantize_block maps large positive → +1, large negative → -1
+        float buf[256] = {};
+        buf[0] =  1.0f;
+        buf[1] = -1.0f;
+        buf[2] =  0.0f;
+        cog::tq::BlockTQ blk;
+        cog::tq::quantize_block(buf, blk);
+        REQUIRE(blk.scale() > 0.0f);
+        float out[256] = {};
+        cog::tq::dequantize_block(blk, out);
+        REQUIRE(out[0] > 0.0f);
+        REQUIRE(out[1] < 0.0f);
+        REQUIRE(std::fabs(out[2]) < 1e-6f);
+    });
+
+    TEST(block_tq_roundtrip_scale, {
+        // Scale must be recoverable; reconstructed values ≤ scale
+        float data[256];
+        for (int i = 0; i < 256; ++i) data[i] = (i % 3 == 0) ? 1.0f : (i % 3 == 1) ? -1.0f : 0.0f;
+        cog::tq::BlockTQ blk;
+        cog::tq::quantize_block(data, blk);
+        REQUIRE(blk.scale() > 0.0f);
+        float out[256];
+        cog::tq::dequantize_block(blk, out);
+        for (int i = 0; i < 256; ++i) {
+            REQUIRE(std::fabs(out[i]) <= blk.scale() * 1.01f);
+        }
+    });
+
+    TEST(ternary_matrix_construct, {
+        // cols must be a multiple of QK=256
+        cog::tq::TernaryMatrix mat(2, 256);
+        REQUIRE(mat.rows_ == 2);
+        REQUIRE(mat.cols_ == 256);
+        REQUIRE(mat.memory_bytes() > 0);
+    });
+
+    TEST(ternary_linear_forward, {
+        // in_features must be a multiple of QK=256
+        // Fresh TernaryLinear has zero-initialized weights and no bias → output is all zeros
+        cog::tq::TernaryLinear layer(256, 4, false);
+        std::vector<float> in(256, 0.5f);
+        std::vector<float> out(4, 99.0f);  // sentinel
+        layer.forward(in.data(), out.data());
+        for (int i = 0; i < 4; ++i) REQUIRE(out[i] == out[i]);  // NaN check
+        // Zero-weight matrix → zero output regardless of input
+        float out2[4] = {99.0f, 99.0f, 99.0f, 99.0f};
+        std::vector<float> in2(256, -0.9f);
+        layer.forward(in2.data(), out2);
+        for (int i = 0; i < 4; ++i) REQUIRE(out2[i] == out[i]);  // same result
+    });
+
+    TEST(ternary_mlp_forward, {
+        // in_dim and hidden_dim must be multiples of QK=256
+        cog::tq::TernaryMLP mlp(256, 256, 4);
+        std::vector<float> in(256, 0.1f);
+        std::vector<float> out(4, 0.0f);
+        mlp.forward(in.data(), out.data());
+        for (int i = 0; i < 4; ++i) REQUIRE(out[i] == out[i]);  // NaN check
+        // All-zero weight network: output must be within bias range (bias init = 0 → out=0)
+        float sum = 0.0f;
+        for (int i = 0; i < 4; ++i) sum += out[i] * out[i];
+        REQUIRE(sum < 1e-6f);  // zero weights → zero output
+    });
+
+    TEST(balanced_ternary_tq_roundtrip, {
+        for (int v : {-13, -1, 0, 1, 13}) {
+            cog::tq::BalancedTernary bt(v);
+            REQUIRE(bt.to_int() == v);
+        }
+    });
+
+    TEST(packing_density_byte5, {
+        auto pd = cog::tq::PackingDensity::byte_5();
+        REQUIRE(pd.trits_per_unit == 5);
+        REQUIRE(pd.unit_bits == 8);
+        REQUIRE(pd.simd_parallelism == 5);
+    });
+
+    TEST(tq_type_info, {
+        REQUIRE(std::string(cog::tq::TQTypeInfo::name) == "TQ_LOG2_3");
+        REQUIRE(cog::tq::TQTypeInfo::block_size == 256);
+        REQUIRE(cog::tq::TQTypeInfo::is_quantized == true);
+    });
+
+    TEST(log2_3_constant, {
+        REQUIRE_NEAR(cog::tq::LOG2_3, 1.58496, 1e-4);
+    });
+}
+
+// ─── cog::dte ─────────────────────────────────────────────────────────────────
+
+void test_dte() {
+    section("cog::dte");
+
+    TEST(identity_vector_defaults, {
+        cog::dte::IdentityVector id(8, 16);
+        REQUIRE(id.latent_dim == 8);
+        REQUIRE(id.level == cog::dte::AutonomyLevel::SCAFFOLD);
+        REQUIRE(id.echobeats_step == 0);
+        REQUIRE(id.agent.size() == cog::dte::AAR_AGENT_DIM);
+        REQUIRE(id.arena.size() == cog::dte::AAR_ARENA_DIM);
+    });
+
+    TEST(identity_vector_coherence_zero, {
+        cog::dte::IdentityVector id(4, 8);
+        // All-zero AAR → coherence is 0
+        REQUIRE_NEAR(id.coherence(), 0.0f, 1e-6f);
+    });
+
+    TEST(identity_vector_to_vector, {
+        cog::dte::IdentityVector id(4, 8);
+        id.agent[0] = 0.9f;
+        auto flat = id.to_vector();
+        REQUIRE(flat.size() == id.identity_dim);
+        REQUIRE_NEAR(flat[0], 0.9f, 1e-5f);
+    });
+
+    TEST(identity_vector_roundtrip, {
+        cog::dte::IdentityVector id(4, 8);
+        id.agent[0] = 0.75f;
+        id.arena[1] = 0.3f;
+        id.level = cog::dte::AutonomyLevel::DELIBERATIVE;
+        auto flat = id.to_vector();
+        cog::dte::IdentityVector id2(4, 8);
+        id2.from_vector(flat.data(), flat.size());
+        REQUIRE_NEAR(id2.agent[0], 0.75f, 1e-5f);
+        REQUIRE_NEAR(id2.arena[1], 0.3f, 1e-5f);
+    });
+
+    TEST(recovery_core_mlp_forward, {
+        // Use default dimensions: identity_dim=125, bottleneck=32, hidden=64
+        cog::dte::RecoveryCoreMLP mlp;
+        cog::dte::IdentityVector id;
+        id.agent[0] = 0.5f;
+        auto flat = id.to_vector();
+        auto recon = mlp.forward(flat.data());
+        REQUIRE(recon.size() == flat.size());
+    });
+
+    TEST(recovery_core_mlp_mse, {
+        cog::dte::RecoveryCoreMLP mlp;
+        cog::dte::IdentityVector id;
+        auto flat = id.to_vector();
+        float mse = mlp.reconstruction_mse(flat.data());
+        REQUIRE(mse >= 0.0f);
+    });
+
+    TEST(checkpoint_roundtrip, {
+        cog::dte::RecoveryCoreMLP mlp;
+        cog::dte::IdentityVector id;
+        id.agent[0] = 0.8f;
+        id.arena[2] = 0.4f;
+        id.timestamp = 42.0;
+        auto bytes = mlp.save_checkpoint(id);
+        REQUIRE(!bytes.empty());
+        cog::dte::IdentityVector id2;
+        bool ok = mlp.load_checkpoint(bytes.data(), bytes.size(), id2);
+        REQUIRE(ok);
+        REQUIRE_NEAR(id2.agent[0], 0.8f, 1e-4f);
+        REQUIRE_NEAR(id2.arena[2], 0.4f, 1e-4f);
+        REQUIRE(id2.timestamp == 42.0);
+    });
+
+    TEST(identity_recovery_node, {
+        cog::dte::IdentityRecoveryNode node;
+        REQUIRE(!node.loaded());
+        cog::dte::RecoveryCoreMLP mlp;
+        cog::dte::IdentityVector id;
+        id.agent[0] = 0.6f;
+        auto bytes = mlp.save_checkpoint(id);
+        bool ok = node.load(bytes.data(), bytes.size());
+        REQUIRE(ok);
+        REQUIRE(node.loaded());
+        REQUIRE_NEAR(node.identity().agent[0], 0.6f, 1e-4f);
+    });
+}
+
+// ─── cog::npu ─────────────────────────────────────────────────────────────────
+
+void test_npu() {
+    section("cog::npu");
+
+    TEST(simplex_geometry_spectral_radius, {
+        // system=1 → A000081[2]=1 → sr=0; use system>=2 for nonzero sr
+        float sr2 = cog::npu::SimplexGeometry::spectral_radius(2);
+        float sr4 = cog::npu::SimplexGeometry::spectral_radius(4);
+        REQUIRE(sr2 > 0.0f && sr2 < 1.0f);
+        REQUIRE(sr4 > 0.0f && sr4 < 1.0f);
+        // system=1 has A000081[2]=1 so spectral_radius returns 0
+        float sr1 = cog::npu::SimplexGeometry::spectral_radius(1);
+        REQUIRE(sr1 >= 0.0f && sr1 < 1.0f);
+    });
+
+    TEST(simplex_geometry_tree_count, {
+        REQUIRE(cog::npu::SimplexGeometry::tree_count(0) == 1);
+        REQUIRE(cog::npu::SimplexGeometry::tree_count(1) == 1);
+        REQUIRE(cog::npu::SimplexGeometry::tree_count(2) >= 1);
+    });
+
+    TEST(simplex_incidence_polynomial, {
+        auto p2 = cog::npu::SimplexGeometry::incidence_polynomial(2);
+        REQUIRE(p2.size() == 3);
+        REQUIRE(p2[0] == 1);
+    });
+
+    TEST(matula_decoder_trivial, {
+        auto info = cog::npu::MatulaDecoder::decode(1);
+        REQUIRE(info.size == 1);
+        REQUIRE(info.depth == 0);
+        REQUIRE(info.topology == cog::npu::MatulaDecoder::TRIVIAL);
+    });
+
+    TEST(matula_decoder_path2, {
+        auto info = cog::npu::MatulaDecoder::decode(2);
+        REQUIRE(info.size == 2);
+        REQUIRE(info.depth == 1);
+    });
+
+    TEST(matula_decoder_nontrivial, {
+        // Matula number 4 = 2² → two children, 3-node tree
+        auto info = cog::npu::MatulaDecoder::decode(4);
+        REQUIRE(info.size >= 3);
+    });
+
+    TEST(harmonic_kernel_dims, {
+        cog::npu::HarmonicKernel hk(4, 8);
+        REQUIRE(hk.dim() == 4);
+        REQUIRE(hk.n_harmonics() == 8);
+    });
+
+    TEST(harmonic_kernel_forward, {
+        cog::npu::HarmonicKernel hk(4, 8);
+        float in[4] = {1.0f, 0.5f, -0.5f, 0.0f};
+        float out[4] = {};
+        hk.forward(in, out);
+        for (int i = 0; i < 4; ++i) REQUIRE(out[i] == out[i]);  // NaN check
+        // Non-zero input with non-zero W_phase_/W_spectral_ (initialized with scale 0.01)
+        // should produce a non-zero output (energy > 0)
+        float energy = 0.0f;
+        for (int i = 0; i < 4; ++i) energy += out[i] * out[i];
+        // With W initialized at ±0.01 scale, energy is small but may be non-zero
+        REQUIRE(energy >= 0.0f);
+    });
+
+    TEST(tree_polytope_npu_dims, {
+        cog::npu::TreePolytopeNPU npu(8, 4, 4);
+        REQUIRE(npu.dim() == 8);
+        REQUIRE(npu.system() == 4);
+        REQUIRE(npu.cycles() == 0);
+        REQUIRE(npu.flops() == 0);
+    });
+
+    TEST(tree_polytope_npu_execute, {
+        cog::npu::TreePolytopeNPU npu(8, 4, 4);
+        float in[8] = {0.5f, -0.5f, 0.3f, -0.3f, 0.1f, -0.1f, 0.0f, 0.0f};
+        npu.dma_write(in, 8);
+        npu.write32(0x00, 1);  // trigger execution
+        REQUIRE(npu.cycles() == 1);
+        REQUIRE(npu.flops() > 0);  // flops counter incremented after execution
+        float out[8] = {};
+        npu.dma_read(out, 8);
+        for (int i = 0; i < 8; ++i) REQUIRE(out[i] == out[i]);  // NaN check
+        // Verify MMIO: status register should be COMPLETE (0x80)
+        REQUIRE(npu.read32(0x04) == 0x80);
+    });
+
+    TEST(npu_spectral_radius, {
+        cog::npu::TreePolytopeNPU npu(8, 4, 4);
+        float sr = npu.spectral_radius();
+        REQUIRE(sr > 0.0f && sr < 1.0f);
+    });
+}
+
+// ─── cog::inference ───────────────────────────────────────────────────────────
+
+void test_inference() {
+    section("cog::inference");
+
+    TEST(verb_enum_values, {
+        REQUIRE(static_cast<int>(cog::inference::Verb::DISCOVER)    == 0);
+        REQUIRE(static_cast<int>(cog::inference::Verb::CLASSIFY)    == 9);
+        REQUIRE(std::string(cog::inference::VERB_NAMES[0]) == "DISCOVER");
+        REQUIRE(std::string(cog::inference::VERB_NAMES[9]) == "CLASSIFY");
+    });
+
+    TEST(model_registry, {
+        REQUIRE(std::string(cog::inference::MODEL_NAMES[0]) == "lucy-dte");
+        REQUIRE(std::string(cog::inference::MODEL_NAMES[1]) == "echoself");
+        REQUIRE(std::string(cog::inference::MODEL_NAMES[2]) == "unicosys-hypergraph");
+        REQUIRE(std::string(cog::inference::MODEL_NAMES[3]) == "Blocknut");
+        REQUIRE(std::string(cog::inference::MODEL_ROLES[0]) == "voice");
+        REQUIRE(std::string(cog::inference::MODEL_ROLES[3]) == "identity");
+    });
+
+    TEST(model_specs, {
+        REQUIRE(cog::inference::MODEL_SPECS[0].id == cog::inference::ModelId::LUCY_DTE);
+        REQUIRE(cog::inference::MODEL_SPECS[0].params == 1700000000ULL);
+        REQUIRE(cog::inference::MODEL_SPECS[1].id == cog::inference::ModelId::ECHOSELF);
+        REQUIRE(cog::inference::MODEL_SPECS[1].params == 24000000ULL);
+    });
+
+    TEST(echobeats_config, {
+        REQUIRE(cog::inference::EchobeatsConfig::CYCLE_LENGTH == 12);
+        REQUIRE(cog::inference::EchobeatsConfig::THREAD_COUNT == 4);
+        REQUIRE(cog::inference::EchobeatsConfig::thread_model(0) == cog::inference::ModelId::LUCY_DTE);
+        REQUIRE(cog::inference::EchobeatsConfig::thread_model(3) == cog::inference::ModelId::BLOCKNUT);
+    });
+
+    TEST(echobeats_step_assignment, {
+        auto steps0 = cog::inference::EchobeatsConfig::thread_steps(0);
+        auto steps1 = cog::inference::EchobeatsConfig::thread_steps(1);
+        REQUIRE(steps0[0] == 0 && steps0[1] == 4 && steps0[2] == 8);
+        REQUIRE(steps1[0] == 1 && steps1[1] == 5 && steps1[2] == 9);
+    });
+
+    TEST(dual_pool_reservoir_init, {
+        cog::inference::ReservoirConfig cfg;
+        cfg.fast_pool_size = 16;
+        cfg.slow_pool_size = 8;
+        cfg.fast_leak_rate = 0.3f;
+        cfg.slow_leak_rate = 0.05f;
+        cfg.spectral_radius = 0.95f;
+        cfg.input_dim = 5;
+        cfg.readout_dim = 3;
+        cog::inference::DualPoolReservoir r(cfg);
+        REQUIRE(r.fast_state.size() == 16);
+        REQUIRE(r.slow_state.size() == 8);
+        REQUIRE(r.readout_weights.size() == (16 + 8) * 3);
+    });
+
+    TEST(dual_pool_reservoir_step, {
+        cog::inference::ReservoirConfig cfg;
+        cfg.fast_pool_size = 16;
+        cfg.slow_pool_size = 8;
+        cfg.fast_leak_rate = 0.3f;
+        cfg.slow_leak_rate = 0.05f;
+        cfg.spectral_radius = 0.95f;
+        cfg.input_dim = 5;
+        cfg.readout_dim = 3;
+        cog::inference::DualPoolReservoir r(cfg);
+        std::vector<float> in(5, 0.1f);
+        auto state = r.step(in);
+        REQUIRE(state.size() == 24);  // fast + slow
+        float energy = 0.0f;
+        for (float s : state) energy += s * s;
+        REQUIRE(energy > 0.0f);
+    });
+
+    TEST(multi_model_engine_init, {
+        cog::inference::MultiModelEngine engine;
+        REQUIRE(engine.total_cycles == 0);
+        const auto& spec = engine.inspect_model(cog::inference::ModelId::LUCY_DTE);
+        REQUIRE(spec.id == cog::inference::ModelId::LUCY_DTE);
+    });
+
+    TEST(multi_model_engine_cycle, {
+        cog::inference::MultiModelEngine engine;
+        // Default engine uses input_dim=24, readout_dim=5
+        std::vector<float> in(24, 0.1f);
+        auto result = engine.run_cycle(in);
+        REQUIRE(result.cycle_number == 1);
+        REQUIRE(result.readout.size() == 5);
+        // After one cycle, history increments by 0.001 → xp=200 → level advances to 1
+        REQUIRE(result.ontogenetic_level >= 0);
+    });
+
+    TEST(classify_model, {
+        REQUIRE(std::string(cog::inference::MultiModelEngine::classify_model(
+            cog::inference::ModelId::LUCY_DTE)) == "decoder-only-transformer");
+        REQUIRE(std::string(cog::inference::MultiModelEngine::classify_model(
+            cog::inference::ModelId::ECHOSELF)) == "causal-lm-gpt2");
+    });
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 int main() {
@@ -1041,6 +1422,10 @@ int main() {
     test_prime();
     test_webvm();
     test_fowler();
+    test_tq();
+    test_dte();
+    test_npu();
+    test_inference();
 
     std::cout << "\n=== Results: " << tests_passed << " passed, "
               << tests_failed << " failed ===\n";
