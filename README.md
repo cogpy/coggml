@@ -15,6 +15,7 @@ A unified, header-only C++11 library implementing all CogPy cognitive architectu
 | **gml** | `cog::gml` | Tensor library — N-dim tensors, Q4/Q8 quantization, Adam/L-BFGS |
 | **prime** | `cog::prime` | AGI architecture — cognitive cycle, PLN, pattern matching, memory systems |
 | **webvm** | `cog::webvm` | Web AtomSpace VM — S-expression parser, Scheme REPL, JSON serialization |
+| **fowler** | `cog::fowler` | Thomas Fowler's 1840 balanced ternary calculating machine — BalancedTernary arithmetic, FowlerMachine simulation |
 
 ## Quick Start
 
