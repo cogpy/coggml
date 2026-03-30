@@ -454,6 +454,160 @@ void demo_fowler() {
     std::cout << "\n  ✓ Fowler balanced ternary machine: arithmetic and simulation working\n";
 }
 
+// ─── demo_tq ──────────────────────────────────────────────────────────────────
+
+void demo_tq() {
+    section("cog::tq — Log₂(3) Ternary Quantization");
+
+    // BlockTQ: quantize and dequantize a 256-element block
+    float data[256];
+    for (int i = 0; i < 256; ++i) data[i] = (i % 3 == 0) ? 1.0f : (i % 3 == 1) ? -1.0f : 0.0f;
+    cog::tq::BlockTQ blk;
+    cog::tq::quantize_block(data, blk);
+    std::cout << "  BlockTQ: scale = " << blk.scale()
+              << "  size = " << sizeof(blk) << " bytes (vs "
+              << 256 * 4 << " bytes fp32)\n";
+    std::cout << "  Compression: ~"
+              << (int)(256 * 4.0 / sizeof(blk)) << "× vs fp32\n";
+
+    // Balanced ternary arithmetic (add static method in cog::tq)
+    cog::tq::BalancedTernary a(13), b(-5);
+    auto sum = cog::tq::BalancedTernary::add(a, b);
+    std::cout << "  BalancedTernary: 13 + (-5) = " << sum.to_int() << "\n";
+
+    // TernaryMLP (256→256→4)
+    cog::tq::TernaryMLP mlp(256, 256, 4);
+    std::vector<float> in(256, 0.1f);
+    std::vector<float> out(4, 0.0f);
+    mlp.forward(in.data(), out.data());
+    std::cout << "  TernaryMLP (256→256→4): output[0] = " << out[0] << "\n";
+
+    // Packing density info
+    auto pd = cog::tq::PackingDensity::byte_5();
+    std::cout << "  Packing: " << pd.trits_per_unit << " trits/"
+              << pd.unit_bits << "-bit unit"
+              << "  (type: " << cog::tq::TQTypeInfo::name << ")\n";
+
+    std::cout << "\n  ✓ TQ_LOG2_3 ternary quantization working\n";
+}
+
+// ─── demo_dte ─────────────────────────────────────────────────────────────────
+
+void demo_dte() {
+    section("cog::dte — DTE Identity MLP (AAR Backup/Restore)");
+
+    // Create an identity vector and set some AAR values
+    cog::dte::IdentityVector id;
+    id.agent[0]  = 0.9f;   // coherence
+    id.agent[1]  = 0.7f;   // valence
+    id.arena[0]  = 0.5f;   // complexity
+    id.relation[0] = 0.8f; // alignment
+    std::cout << "  IdentityVector: dim=" << id.identity_dim
+              << "  coherence=" << id.coherence() << "\n";
+
+    // Checkpoint round-trip
+    cog::dte::RecoveryCoreMLP mlp;
+    auto bytes = mlp.save_checkpoint(id);
+    cog::dte::IdentityVector id2;
+    mlp.load_checkpoint(bytes.data(), bytes.size(), id2);
+    std::cout << "  Checkpoint: " << bytes.size() << " bytes saved\n";
+    std::cout << "  After restore: agent[0]=" << id2.agent[0]
+              << "  arena[0]=" << id2.arena[0] << "\n";
+
+    // MSE
+    auto flat = id.to_vector();
+    float mse = mlp.reconstruction_mse(flat.data());
+    std::cout << "  Reconstruction MSE: " << mse << "\n";
+
+    // IdentityRecoveryNode
+    cog::dte::IdentityRecoveryNode node;
+    node.load(bytes.data(), bytes.size());
+    std::cout << "  IdentityRecoveryNode: loaded=" << node.loaded()
+              << "  coherence=" << node.coherence() << "\n";
+
+    std::cout << "\n  ✓ DTE identity backup/restore working\n";
+}
+
+// ─── demo_npu ─────────────────────────────────────────────────────────────────
+
+void demo_npu() {
+    section("cog::npu — Tree-Polytope NPU");
+
+    // Matula decoder
+    auto m1 = cog::npu::MatulaDecoder::decode(1);
+    auto m2 = cog::npu::MatulaDecoder::decode(2);
+    auto m4 = cog::npu::MatulaDecoder::decode(4);
+    std::cout << "  MatulaDecoder: M(1)=size" << m1.size
+              << "  M(2)=size" << m2.size
+              << "  M(4)=size" << m4.size << "\n";
+
+    // Simplex geometry
+    float sr = cog::npu::SimplexGeometry::spectral_radius(4);
+    int tc = cog::npu::SimplexGeometry::tree_count(4);
+    std::cout << "  SimplexGeometry: system=4  spectral_radius=" << sr
+              << "  tree_count=" << tc << "\n";
+
+    // HarmonicKernel
+    cog::npu::HarmonicKernel hk(8, 4);
+    float kin[8] = {1.f, -1.f, 0.5f, -0.5f, 0.3f, -0.3f, 0.1f, -0.1f};
+    float kout[8] = {};
+    hk.forward(kin, kout);
+    std::cout << "  HarmonicKernel(8, 4→8): out[0]=" << kout[0] << "\n";
+
+    // TreePolytopeNPU
+    cog::npu::TreePolytopeNPU npu(8, 4, 4);
+    npu.dma_write(kin, 8);
+    npu.write32(0x00, 1);
+    float npuout[8] = {};
+    npu.dma_read(npuout, 8);
+    std::cout << "  TreePolytopeNPU(dim=8, system=4): cycles=" << npu.cycles()
+              << "  flops=" << npu.flops()
+              << "  spectral_radius=" << npu.spectral_radius() << "\n";
+
+    std::cout << "\n  ✓ Tree-Polytope NPU working\n";
+}
+
+// ─── demo_inference ───────────────────────────────────────────────────────────
+
+void demo_inference() {
+    section("cog::inference — Multi-Model DTE Inference Engine");
+
+    // Model registry
+    std::cout << "  Model registry (4 models):\n";
+    for (int i = 0; i < 4; ++i) {
+        const auto& spec = cog::inference::MODEL_SPECS[i];
+        std::cout << "    [" << cog::inference::MODEL_NAMES[i] << "]"
+                  << " role=" << cog::inference::MODEL_ROLES[i]
+                  << " params=" << spec.params
+                  << " arch=" << spec.architecture << "\n";
+    }
+
+    // Echobeats config
+    std::cout << "  Echobeats: " << cog::inference::EchobeatsConfig::CYCLE_LENGTH
+              << "-step/" << cog::inference::EchobeatsConfig::THREAD_COUNT
+              << "-thread cycle\n";
+    for (size_t t = 0; t < cog::inference::EchobeatsConfig::THREAD_COUNT; ++t) {
+        auto steps = cog::inference::EchobeatsConfig::thread_steps(t);
+        std::cout << "    Thread " << t << " → steps "
+                  << steps[0] << "," << steps[1] << "," << steps[2]
+                  << " (model: " << cog::inference::MODEL_NAMES[static_cast<int>(
+                      cog::inference::EchobeatsConfig::thread_model(t))] << ")\n";
+    }
+
+    // Run a cognitive cycle
+    cog::inference::MultiModelEngine engine;
+    std::vector<float> input(24, 0.1f);
+    auto result = engine.run_cycle(input);
+    std::cout << "  Cognitive cycle #" << result.cycle_number
+              << ": readout[0]=" << result.readout[0]
+              << "  coherence=" << result.coherence
+              << "  level=" << (int)result.ontogenetic_level << "\n";
+    std::cout << "  Verb DISCOVER=" << cog::inference::VERB_NAMES[0]
+              << "  CLASSIFY=" << cog::inference::VERB_NAMES[9] << "\n";
+
+    std::cout << "\n  ✓ Multi-model DTE inference engine working\n";
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 int main() {
@@ -471,9 +625,13 @@ int main() {
     demo_prime();
     demo_webvm();
     demo_fowler();
+    demo_tq();
+    demo_dte();
+    demo_npu();
+    demo_inference();
 
     std::cout << "\n╔══════════════════════════════════════════════════════╗\n";
-    std::cout << "║  All 10 modules demonstrated successfully!           ║\n";
+    std::cout << "║  All 14 modules demonstrated successfully!           ║\n";
     std::cout << "╚══════════════════════════════════════════════════════╝\n\n";
     return 0;
 }

@@ -16,6 +16,10 @@ A unified, header-only C++11 library implementing all CogPy cognitive architectu
 | **prime** | `cog::prime` | AGI architecture — cognitive cycle, PLN, pattern matching, memory systems |
 | **webvm** | `cog::webvm` | Web AtomSpace VM — S-expression parser, Scheme REPL, JSON serialization |
 | **fowler** | `cog::fowler` | Thomas Fowler's 1840 balanced ternary calculating machine — BalancedTernary arithmetic, FowlerMachine simulation |
+| **tq** | `cog::tq` | Log₂(3) ternary quantization — 5 trits/byte packing, BlockTQ, TernaryMLP, entropy analysis |
+| **dte** | `cog::dte` | Dense MLP autoencoder — DTE identity backup/restore, AAR vector serialization, online SGD |
+| **npu** | `cog::npu` | Tree-Polytope NPU — HarmonicKernel, MatulaDecoder, SkillmISA, SimplexGeometry |
+| **inference** | `cog::inference` | Unified multi-model DTE inference engine — 4-model Echobeats pipeline, DualPoolReservoir, AutognosisCycle |
 
 ## Quick Start
 
