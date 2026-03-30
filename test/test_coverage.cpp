@@ -528,15 +528,19 @@ void test_gml_extended() {
     TEST(lbfgs_step, {
         cog::gml::LBFGS lbfgs;
         std::vector<float> param = {1.0f, 2.0f};
-        std::vector<float> grad  = {2.0f * param[0], 2.0f * param[1]}; // grad of sum(p^2)
-        lbfgs.step(param.data(), grad.data(), param.size(),
-                   [](const float* p) {
-                       return p[0]*p[0] + p[1]*p[1];
-                   });
-        // params should have moved toward zero
-        REQUIRE(std::fabs(param[0]) < 1.0f + 1e-3f); // may be very small change on first step
+        // Run multiple steps to verify convergence toward minimum of f(p) = sum(p^2)
+        for (int iter = 0; iter < 5; ++iter) {
+            std::vector<float> grad = {2.0f * param[0], 2.0f * param[1]};
+            lbfgs.step(param.data(), grad.data(), param.size(),
+                       [](const float* p) {
+                           return p[0]*p[0] + p[1]*p[1];
+                       });
+        }
+        // After multiple LBFGS steps, parameters should move closer to zero
         REQUIRE(std::isfinite(param[0]));
         REQUIRE(std::isfinite(param[1]));
+        REQUIRE(param[0] < 1.0f); // should have moved from initial 1.0
+        REQUIRE(param[1] < 2.0f); // should have moved from initial 2.0
     });
 }
 
@@ -1123,18 +1127,24 @@ void test_pilot_extended() {
 
     // CogPilot::calibrated_spectral_radius
     TEST(cogpilot_calibrated_spectral_radius, {
-        // system_level=0,1 → A000081[1]=A000081[2]=1 → 1-1/1=0.0 (valid)
-        // system_level=2   → A000081[3]=2 → 0.5
-        // system_level=4   → A000081[5]=9 → ~0.889
+        // A000081 sequence: 0,1,1,2,4,9,20,...
+        // spectral_radius(system) = 1 - 1/A000081[system+1]
+        // system_level=2 → A000081[3]=2 → 0.5
+        // system_level=4 → A000081[5]=9 → ~0.889
+        // system_level=8 → A000081[9]=286 → ~0.997
         double r2 = cog::pilot::CogPilot::calibrated_spectral_radius(2);
         double r4 = cog::pilot::CogPilot::calibrated_spectral_radius(4);
         double r8 = cog::pilot::CogPilot::calibrated_spectral_radius(8);
+        // All results must be in valid range [0,1] and finite
         REQUIRE(r2 >= 0.0 && r2 <= 1.0);
         REQUIRE(r4 >= 0.0 && r4 <= 1.0);
         REQUIRE(r8 >= 0.0 && r8 <= 1.0);
         REQUIRE(std::isfinite(r2));
         REQUIRE(std::isfinite(r4));
-        REQUIRE(r4 > r2); // higher system_level → larger A000081 → closer to 1.0
+        REQUIRE(std::isfinite(r8));
+        // A000081 is strictly increasing for system_level >= 2, so spectral radii increase
+        REQUIRE(r4 > r2);
+        REQUIRE(r8 > r4);
     });
 }
 
