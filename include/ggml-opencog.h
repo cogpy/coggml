@@ -96,6 +96,8 @@ struct ggml_opencog_binding {
         return true;
     }
 
+    // Returns the atom ID bound to var_id, or 0 if unbound.
+    // 0 is safe as a sentinel because atom IDs always start from 1.
     uint64_t get(uint64_t var_id) const {
         auto it = bindings.find(var_id);
         return (it != bindings.end()) ? it->second : 0;

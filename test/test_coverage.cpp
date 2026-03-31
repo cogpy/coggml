@@ -823,7 +823,9 @@ void test_prime_extended() {
         cog::prime::DeclarativeMemory mem;
         auto h = mem.store_fact("Paris", "capital_of", "France");
         REQUIRE(h != cog::UNDEFINED_HANDLE);
-        REQUIRE(mem.size() == 4);  // subject + predicate + object + eval_link
+        // store_fact creates: subject (ConceptNode), predicate (PredicateNode),
+        // object (ConceptNode), and the EvaluationLink = 4 atoms total
+        REQUIRE(mem.size() == 4);
     });
 }
 

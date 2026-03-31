@@ -520,7 +520,9 @@ bool test_remove_atom() {
     }
 
     // Remove non-existent atom should return false
-    bool removed_fake = ggml_opencog_remove_atom(atomspace, 99999);
+    // Using a guaranteed-invalid ID (well beyond any allocated ID)
+    static const uint64_t INVALID_ATOM_ID = UINT64_MAX;
+    bool removed_fake = ggml_opencog_remove_atom(atomspace, INVALID_ATOM_ID);
     if (removed_fake) {
         std::cout << "FAILED (removing non-existent atom returned true)\n";
         ggml_opencog_atomspace_free(atomspace);

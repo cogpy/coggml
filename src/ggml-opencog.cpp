@@ -638,6 +638,14 @@ void ggml_opencog_cogserver_stop(struct ggml_opencog_cogserver* server) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Shared constants for inference thresholds
+// ─────────────────────────────────────────────────────────────────────────────
+// Minimum confidence for a derived truth value to be accepted
+static const float GGML_OPENCOG_MIN_DERIVE_CONFIDENCE = 1e-6f;
+// Minimum confidence for a goal to be considered proved
+static const float GGML_OPENCOG_MIN_PROVED_CONFIDENCE = 0.1f;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Extended PLN rules
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -712,7 +720,7 @@ std::vector<uint64_t> ggml_opencog_forward_chain(
                     ggml_opencog_pln_deduction(ab_link->tv, bc_link->tv);
 
                 // Only add if TV is meaningful
-                if (tv_ac.confidence < 1e-6f) continue;
+                if (tv_ac.confidence < GGML_OPENCOG_MIN_DERIVE_CONFIDENCE) continue;
 
                 // Build a unique name for this derived link
                 auto* atom_a = ggml_opencog_get_atom(atomspace, a_id);
@@ -778,7 +786,7 @@ bool ggml_opencog_backward_chain(
     if (!goal) return false;
 
     // Base case: goal already exists with sufficient confidence
-    if (goal->tv.confidence >= 0.3f) {
+    if (goal->tv.confidence >= GGML_OPENCOG_MIN_PROVED_CONFIDENCE) {
         derivation_path.push_back(goal_id);
         return true;
     }
@@ -812,7 +820,7 @@ bool ggml_opencog_backward_chain(
                 struct ggml_opencog_truth_value tv_ac =
                     ggml_opencog_pln_deduction(link->tv, link2->tv);
 
-                if (tv_ac.confidence >= 0.1f) {
+                if (tv_ac.confidence >= GGML_OPENCOG_MIN_PROVED_CONFIDENCE) {
                     // Update goal TV
                     goal->tv = tv_ac;
                     derivation_path.push_back(link_id);
@@ -849,14 +857,14 @@ bool ggml_opencog_backward_chain(
             if (ggml_opencog_backward_chain(atomspace, sub_goal_id,
                                             max_depth - 1, sub_path)) {
                 auto* derived_bc = ggml_opencog_get_atom(atomspace, sub_goal_id);
-                if (derived_bc && derived_bc->tv.confidence >= 0.1f) {
+                if (derived_bc && derived_bc->tv.confidence >= GGML_OPENCOG_MIN_PROVED_CONFIDENCE) {
                     struct ggml_opencog_truth_value tv_ac =
                         ggml_opencog_pln_deduction(link->tv, derived_bc->tv);
                     goal->tv = tv_ac;
                     derivation_path.insert(derivation_path.end(),
                                            sub_path.begin(), sub_path.end());
                     derivation_path.push_back(goal_id);
-                    return tv_ac.confidence >= 0.1f;
+                    return tv_ac.confidence >= GGML_OPENCOG_MIN_PROVED_CONFIDENCE;
                 }
             }
             // Clean up unsuccessful sub-goal
@@ -874,7 +882,7 @@ bool ggml_opencog_backward_chain(
             auto* elink = ggml_opencog_get_atom(atomspace, eid);
             if (!elink) continue;
             for (uint64_t out_id : elink->outgoing) {
-                if (out_id == goal_id && elink->tv.confidence >= 0.3f) {
+                if (out_id == goal_id && elink->tv.confidence >= GGML_OPENCOG_MIN_PROVED_CONFIDENCE) {
                     derivation_path.push_back(eid);
                     derivation_path.push_back(goal_id);
                     goal->tv = elink->tv;
