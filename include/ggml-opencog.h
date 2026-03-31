@@ -22,7 +22,15 @@ enum ggml_opencog_atom_type {
     GGML_OPENCOG_SEQUENTIAL_LINK = 6,
     GGML_OPENCOG_SIMULTANEOUS_LINK = 7,
     GGML_OPENCOG_AT_TIME_LINK = 8,
-    GGML_OPENCOG_ATOM_TYPE_COUNT = 9
+    // Extended atom types for richer knowledge representation
+    GGML_OPENCOG_VARIABLE_NODE = 9,      // Variable atom for pattern matching
+    GGML_OPENCOG_NUMBER_NODE = 10,       // Numeric value atom
+    GGML_OPENCOG_AND_LINK = 11,          // Logical AND of members
+    GGML_OPENCOG_OR_LINK = 12,           // Logical OR of members
+    GGML_OPENCOG_NOT_LINK = 13,          // Logical NOT of single member
+    GGML_OPENCOG_IMPLICATION_LINK = 14,  // Probabilistic implication A -> B
+    GGML_OPENCOG_LIST_LINK = 15,         // Ordered list of atoms
+    GGML_OPENCOG_ATOM_TYPE_COUNT = 16
 };
 
 // Time interval structure for temporal reasoning
@@ -73,6 +81,31 @@ struct ggml_opencog_atomspace {
     
     struct ggml_tensor* type_embeddings;       // Learnable type embeddings
     struct ggml_tensor* atom_matrix;           // Matrix of all atom embeddings
+};
+
+// Variable binding for pattern matching with VariableNode atoms
+struct ggml_opencog_binding {
+    std::unordered_map<uint64_t, uint64_t> bindings;  // variable_id -> matched_atom_id
+
+    bool bind(uint64_t var_id, uint64_t atom_id) {
+        auto it = bindings.find(var_id);
+        if (it != bindings.end()) {
+            return it->second == atom_id;  // consistent if already bound to same
+        }
+        bindings[var_id] = atom_id;
+        return true;
+    }
+
+    uint64_t get(uint64_t var_id) const {
+        auto it = bindings.find(var_id);
+        return (it != bindings.end()) ? it->second : 0;
+    }
+
+    bool has(uint64_t var_id) const {
+        return bindings.find(var_id) != bindings.end();
+    }
+
+    size_t size() const { return bindings.size(); }
 };
 
 // MindAgent interface for cognitive processes
@@ -198,6 +231,53 @@ void ggml_opencog_cogserver_add_agent(struct ggml_opencog_cogserver* server, str
 void ggml_opencog_cogserver_run_cycle(struct ggml_opencog_cogserver* server);
 void ggml_opencog_cogserver_start(struct ggml_opencog_cogserver* server);
 void ggml_opencog_cogserver_stop(struct ggml_opencog_cogserver* server);
+
+// Extended PLN rules: conjunction, disjunction, negation
+struct ggml_opencog_truth_value ggml_opencog_pln_conjunction(
+    struct ggml_opencog_truth_value tv1,
+    struct ggml_opencog_truth_value tv2);
+
+struct ggml_opencog_truth_value ggml_opencog_pln_disjunction(
+    struct ggml_opencog_truth_value tv1,
+    struct ggml_opencog_truth_value tv2);
+
+struct ggml_opencog_truth_value ggml_opencog_pln_negation(
+    struct ggml_opencog_truth_value tv);
+
+// Forward chaining: iteratively apply PLN deduction to derive new InheritanceLinks.
+// Returns IDs of newly derived atoms. Stops when no new derivations are possible
+// or max_iterations is reached.
+std::vector<uint64_t> ggml_opencog_forward_chain(
+    struct ggml_opencog_atomspace* atomspace,
+    int max_iterations);
+
+// Backward chaining: attempt to prove that goal_atom can be derived from existing
+// knowledge using PLN deduction chains up to max_depth. Fills derivation_path with
+// intermediate atom IDs used in the proof. Returns true if goal can be derived.
+bool ggml_opencog_backward_chain(
+    struct ggml_opencog_atomspace* atomspace,
+    uint64_t goal_id,
+    int max_depth,
+    std::vector<uint64_t>& derivation_path);
+
+// Pattern matching with variable binding: check whether pattern_id (which may
+// contain VARIABLE_NODE atoms) structurally matches candidate_id. Fills binding
+// with any variable assignments. Returns true on match.
+bool ggml_opencog_match_with_binding(
+    struct ggml_opencog_atomspace* atomspace,
+    uint64_t pattern_id,
+    uint64_t candidate_id,
+    struct ggml_opencog_binding* binding);
+
+// Find all atoms in the atomspace that match pattern_id (may contain variables).
+// Returns vector of (matched_atom_id, binding) pairs.
+std::vector<std::pair<uint64_t, struct ggml_opencog_binding>>
+ggml_opencog_find_matching(
+    struct ggml_opencog_atomspace* atomspace,
+    uint64_t pattern_id);
+
+// Get the total number of atoms in the atomspace
+size_t ggml_opencog_atom_count(struct ggml_opencog_atomspace* atomspace);
 
 #ifdef __cplusplus
 }

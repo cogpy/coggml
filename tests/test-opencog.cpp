@@ -488,27 +488,593 @@ bool test_temporal_reasoning() {
     return true;
 }
 
+
+bool test_remove_atom() {
+    std::cout << "Testing atom removal... ";
+
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    struct ggml_opencog_truth_value tv = {0.8f, 0.6f};
+
+    uint64_t id1 = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Dog", tv, {});
+    uint64_t id2 = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Cat", tv, {});
+
+    size_t count_before = ggml_opencog_atom_count(atomspace);
+
+    bool removed = ggml_opencog_remove_atom(atomspace, id1);
+    if (!removed) {
+        std::cout << "FAILED (remove returned false)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    if (ggml_opencog_atom_count(atomspace) != count_before - 1) {
+        std::cout << "FAILED (count not decremented)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    if (ggml_opencog_get_atom(atomspace, id1) != nullptr) {
+        std::cout << "FAILED (atom still accessible after removal)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Remove non-existent atom should return false
+    bool removed_fake = ggml_opencog_remove_atom(atomspace, 99999);
+    if (removed_fake) {
+        std::cout << "FAILED (removing non-existent atom returned true)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Remaining atom should still be accessible
+    if (ggml_opencog_get_atom(atomspace, id2) == nullptr) {
+        std::cout << "FAILED (surviving atom inaccessible)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_pln_direct_values() {
+    std::cout << "Testing PLN direct values... ";
+
+    // Deduction: s = s_AB * s_BC (simplified)
+    {
+        struct ggml_opencog_truth_value ab = {0.9f, 0.8f};
+        struct ggml_opencog_truth_value bc = {0.8f, 0.7f};
+        auto result = ggml_opencog_pln_deduction(ab, bc);
+        if (result.strength < 0.0f || result.strength > 1.0f ||
+            result.confidence < 0.0f || result.confidence > 1.0f) {
+            std::cout << "FAILED (deduction bounds)\n";
+            return false;
+        }
+        // strength should relate to product of inputs
+        if (result.strength > ab.strength || result.strength > bc.strength) {
+            std::cout << "FAILED (deduction should reduce strength)\n";
+            return false;
+        }
+    }
+
+    // Induction: strength bounded [0,1], confidence reduced
+    {
+        struct ggml_opencog_truth_value ac = {0.8f, 0.9f};
+        struct ggml_opencog_truth_value bc = {0.7f, 0.8f};
+        auto result = ggml_opencog_pln_induction(ac, bc);
+        if (result.strength < 0.0f || result.strength > 1.0f) {
+            std::cout << "FAILED (induction strength bounds)\n";
+            return false;
+        }
+        if (result.confidence >= ac.confidence) {
+            std::cout << "FAILED (induction should reduce confidence)\n";
+            return false;
+        }
+    }
+
+    // Abduction: strength bounded [0,1], confidence reduced
+    {
+        struct ggml_opencog_truth_value ac = {0.8f, 0.9f};
+        struct ggml_opencog_truth_value bc = {0.7f, 0.8f};
+        auto result = ggml_opencog_pln_abduction(ac, bc);
+        if (result.strength < 0.0f || result.strength > 1.0f) {
+            std::cout << "FAILED (abduction strength bounds)\n";
+            return false;
+        }
+        if (result.confidence >= bc.confidence) {
+            std::cout << "FAILED (abduction should reduce confidence)\n";
+            return false;
+        }
+    }
+
+    // Revision: weighted combination
+    {
+        struct ggml_opencog_truth_value tv1 = {0.9f, 0.8f};
+        struct ggml_opencog_truth_value tv2 = {0.5f, 0.2f};
+        auto result = ggml_opencog_pln_revision(tv1, tv2);
+        // Result strength should be closer to tv1 (higher confidence)
+        if (result.strength < 0.7f) {
+            std::cout << "FAILED (revision should weight toward higher confidence)\n";
+            return false;
+        }
+        if (result.confidence <= tv1.confidence) {
+            std::cout << "FAILED (revision should increase confidence)\n";
+            return false;
+        }
+    }
+
+    // Modus ponens: s = s_impl * s_antecedent
+    {
+        struct ggml_opencog_truth_value impl = {0.9f, 0.8f};
+        struct ggml_opencog_truth_value ante = {0.8f, 0.9f};
+        auto result = ggml_opencog_pln_modus_ponens(impl, ante);
+        float expected_s = impl.strength * ante.strength;
+        if (fabsf(result.strength - expected_s) > 1e-5f) {
+            std::cout << "FAILED (modus ponens strength: got " << result.strength
+                      << " expected " << expected_s << ")\n";
+            return false;
+        }
+    }
+
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_pln_extended_rules() {
+    std::cout << "Testing PLN extended rules... ";
+
+    // Conjunction: s = s1 * s2
+    {
+        struct ggml_opencog_truth_value tv1 = {0.8f, 0.9f};
+        struct ggml_opencog_truth_value tv2 = {0.6f, 0.7f};
+        auto result = ggml_opencog_pln_conjunction(tv1, tv2);
+        float expected = 0.8f * 0.6f;
+        if (fabsf(result.strength - expected) > 1e-5f) {
+            std::cout << "FAILED (conjunction strength: " << result.strength
+                      << " expected " << expected << ")\n";
+            return false;
+        }
+        if (fabsf(result.confidence - fminf(tv1.confidence, tv2.confidence)) > 1e-5f) {
+            std::cout << "FAILED (conjunction confidence)\n";
+            return false;
+        }
+    }
+
+    // Disjunction: s = 1 - (1-s1)*(1-s2)
+    {
+        struct ggml_opencog_truth_value tv1 = {0.8f, 0.9f};
+        struct ggml_opencog_truth_value tv2 = {0.6f, 0.7f};
+        auto result = ggml_opencog_pln_disjunction(tv1, tv2);
+        float expected = 1.0f - (1.0f - 0.8f) * (1.0f - 0.6f);
+        if (fabsf(result.strength - expected) > 1e-5f) {
+            std::cout << "FAILED (disjunction strength: " << result.strength
+                      << " expected " << expected << ")\n";
+            return false;
+        }
+        // Disjunction strength should be >= each input
+        if (result.strength < tv1.strength || result.strength < tv2.strength) {
+            std::cout << "FAILED (disjunction should be >= each input)\n";
+            return false;
+        }
+    }
+
+    // Negation: s = 1 - s, confidence unchanged
+    {
+        struct ggml_opencog_truth_value tv = {0.7f, 0.8f};
+        auto result = ggml_opencog_pln_negation(tv);
+        if (fabsf(result.strength - 0.3f) > 1e-5f) {
+            std::cout << "FAILED (negation strength: " << result.strength << ")\n";
+            return false;
+        }
+        if (fabsf(result.confidence - tv.confidence) > 1e-5f) {
+            std::cout << "FAILED (negation should preserve confidence)\n";
+            return false;
+        }
+    }
+
+    // Negation of 0 should give 1
+    {
+        struct ggml_opencog_truth_value tv = {0.0f, 1.0f};
+        auto result = ggml_opencog_pln_negation(tv);
+        if (fabsf(result.strength - 1.0f) > 1e-5f) {
+            std::cout << "FAILED (negation of 0 should be 1)\n";
+            return false;
+        }
+    }
+
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_variable_nodes() {
+    std::cout << "Testing variable node matching... ";
+
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    struct ggml_opencog_truth_value tv = {0.8f, 0.7f};
+
+    // Create concept nodes
+    uint64_t dog_id    = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Dog", tv, {});
+    uint64_t animal_id = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Animal", tv, {});
+
+    // Create a variable node $X
+    struct ggml_opencog_truth_value var_tv = {0.5f, 0.0f};
+    uint64_t var_x = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_VARIABLE_NODE, "$X", var_tv, {});
+
+    // Variable should match any concept node
+    struct ggml_opencog_binding b1;
+    bool match1 = ggml_opencog_match_with_binding(atomspace, var_x, dog_id, &b1);
+    if (!match1) {
+        std::cout << "FAILED (variable should match concept node)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    if (b1.get(var_x) != dog_id) {
+        std::cout << "FAILED (binding not recorded correctly)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Exact match: concept node only matches itself
+    struct ggml_opencog_binding b2;
+    bool match2 = ggml_opencog_match_with_binding(atomspace, dog_id, animal_id, &b2);
+    if (match2) {
+        std::cout << "FAILED (Dog should not match Animal)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Exact match: same atom
+    struct ggml_opencog_binding b3;
+    bool match3 = ggml_opencog_match_with_binding(atomspace, dog_id, dog_id, &b3);
+    if (!match3) {
+        std::cout << "FAILED (atom should match itself)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Consistent binding: variable already bound should only match same atom
+    struct ggml_opencog_binding b4;
+    b4.bind(var_x, dog_id);
+    bool match4 = ggml_opencog_match_with_binding(atomspace, var_x, animal_id, &b4);
+    if (match4) {
+        std::cout << "FAILED (bound variable should not match different atom)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Variable should match the same atom it's already bound to
+    struct ggml_opencog_binding b5;
+    b5.bind(var_x, dog_id);
+    bool match5 = ggml_opencog_match_with_binding(atomspace, var_x, dog_id, &b5);
+    if (!match5) {
+        std::cout << "FAILED (bound variable should match its binding)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_forward_chaining() {
+    std::cout << "Testing forward chaining... ";
+
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    struct ggml_opencog_truth_value tv_high = {0.9f, 0.8f};
+
+    // Create knowledge: Socrates->Human->Animal->Mortal
+    uint64_t socrates = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Socrates", tv_high, {});
+    uint64_t human    = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Human", tv_high, {});
+    uint64_t animal   = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Animal", tv_high, {});
+    uint64_t mortal   = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Mortal", tv_high, {});
+
+    ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                          "Socrates->Human", tv_high, {socrates, human});
+    ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                          "Human->Animal", tv_high, {human, animal});
+    ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                          "Animal->Mortal", tv_high, {animal, mortal});
+
+    size_t before = ggml_opencog_atom_count(atomspace);
+
+    // Run forward chaining
+    auto derived = ggml_opencog_forward_chain(atomspace, 10);
+
+    size_t after = ggml_opencog_atom_count(atomspace);
+
+    // Should have derived new links (at least Socrates->Animal)
+    if (derived.empty()) {
+        std::cout << "FAILED (no atoms derived)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    if (after <= before) {
+        std::cout << "FAILED (atomspace did not grow)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Check that Socrates->Mortal was eventually derived
+    bool found_socrates_mortal = false;
+    auto links = ggml_opencog_get_atoms_by_type(atomspace, GGML_OPENCOG_INHERITANCE_LINK);
+    for (uint64_t lid : links) {
+        auto* link = ggml_opencog_get_atom(atomspace, lid);
+        if (link && link->outgoing.size() >= 2 &&
+            link->outgoing[0] == socrates && link->outgoing[1] == mortal) {
+            found_socrates_mortal = true;
+            break;
+        }
+    }
+
+    if (!found_socrates_mortal) {
+        std::cout << "FAILED (Socrates->Mortal not derived)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_backward_chaining() {
+    std::cout << "Testing backward chaining... ";
+
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    struct ggml_opencog_truth_value tv_high = {0.9f, 0.8f};
+
+    // Create knowledge: Socrates->Human, Human->Animal
+    uint64_t socrates = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Socrates", tv_high, {});
+    uint64_t human    = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Human", tv_high, {});
+    uint64_t animal   = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Animal", tv_high, {});
+
+    ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                          "Socrates->Human", tv_high, {socrates, human});
+    ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                          "Human->Animal", tv_high, {human, animal});
+
+    // Goal: prove Socrates->Animal (not directly present)
+    struct ggml_opencog_truth_value zero_tv = {0.0f, 0.0f};
+    uint64_t goal = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                                          "Socrates->Animal(goal)", zero_tv, {socrates, animal});
+
+    std::vector<uint64_t> path;
+    bool proved = ggml_opencog_backward_chain(atomspace, goal, 5, path);
+
+    if (!proved) {
+        std::cout << "FAILED (could not prove Socrates->Animal)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    if (path.empty()) {
+        std::cout << "FAILED (derivation path is empty)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Goal TV should be updated
+    auto* goal_atom = ggml_opencog_get_atom(atomspace, goal);
+    if (!goal_atom || goal_atom->tv.confidence < 0.1f) {
+        std::cout << "FAILED (goal TV not updated)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Test with an un-provable goal
+    uint64_t dog    = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Dog", tv_high, {});
+    uint64_t planet = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Planet", tv_high, {});
+    uint64_t unprovable = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                                                "Dog->Planet(goal)", zero_tv, {dog, planet});
+    std::vector<uint64_t> path2;
+    bool proved2 = ggml_opencog_backward_chain(atomspace, unprovable, 3, path2);
+    // This should not be proved (no relevant links exist)
+    if (proved2) {
+        std::cout << "FAILED (unprovable goal should not be proved)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_find_matching() {
+    std::cout << "Testing find_matching... ";
+
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    struct ggml_opencog_truth_value tv = {0.8f, 0.7f};
+
+    uint64_t dog    = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Dog", tv, {});
+    uint64_t cat    = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Cat", tv, {});
+    uint64_t animal = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "Animal", tv, {});
+
+    // Exact pattern: Dog matches only itself
+    auto exact_matches = ggml_opencog_find_matching(atomspace, dog);
+    bool found_dog = false;
+    for (auto& p : exact_matches) {
+        if (p.first == dog) { found_dog = true; break; }
+    }
+    if (!found_dog) {
+        std::cout << "FAILED (exact pattern should match itself)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Variable pattern should match all concept nodes
+    struct ggml_opencog_truth_value var_tv = {0.5f, 0.0f};
+    uint64_t var_x = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_VARIABLE_NODE, "$X", var_tv, {});
+    auto var_matches = ggml_opencog_find_matching(atomspace, var_x);
+
+    // Should find at least dog, cat, animal (and possibly the variable itself)
+    size_t concept_matches = 0;
+    for (auto& p : var_matches) {
+        auto* a = ggml_opencog_get_atom(atomspace, p.first);
+        if (a && a->type == GGML_OPENCOG_CONCEPT_NODE) ++concept_matches;
+    }
+    if (concept_matches < 3) {
+        std::cout << "FAILED (variable should match all concept nodes, got "
+                  << concept_matches << ")\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_atom_count() {
+    std::cout << "Testing atom count... ";
+
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    if (ggml_opencog_atom_count(atomspace) != 0) {
+        std::cout << "FAILED (empty atomspace should have 0 atoms)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    struct ggml_opencog_truth_value tv = {0.8f, 0.6f};
+    ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "A", tv, {});
+    ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "B", tv, {});
+    ggml_opencog_add_atom(atomspace, GGML_OPENCOG_PREDICATE_NODE, "P", tv, {});
+
+    if (ggml_opencog_atom_count(atomspace) != 3) {
+        std::cout << "FAILED (expected 3, got "
+                  << ggml_opencog_atom_count(atomspace) << ")\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
+bool test_new_atom_types() {
+    std::cout << "Testing new atom types... ";
+
+    auto* atomspace = ggml_opencog_atomspace_new(32);
+    struct ggml_opencog_truth_value tv = {0.8f, 0.7f};
+
+    // NumberNode
+    uint64_t num = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_NUMBER_NODE, "42", tv, {});
+    auto* num_atom = ggml_opencog_get_atom(atomspace, num);
+    if (!num_atom || num_atom->type != GGML_OPENCOG_NUMBER_NODE) {
+        std::cout << "FAILED (NumberNode creation)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // VariableNode
+    uint64_t var = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_VARIABLE_NODE, "$V", tv, {});
+    auto* var_atom = ggml_opencog_get_atom(atomspace, var);
+    if (!var_atom || var_atom->type != GGML_OPENCOG_VARIABLE_NODE) {
+        std::cout << "FAILED (VariableNode creation)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // AndLink, OrLink, NotLink
+    uint64_t a = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "A", tv, {});
+    uint64_t b = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_CONCEPT_NODE, "B", tv, {});
+
+    uint64_t and_link = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_AND_LINK, "A AND B", tv, {a, b});
+    uint64_t or_link  = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_OR_LINK,  "A OR B",  tv, {a, b});
+    uint64_t not_link = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_NOT_LINK, "NOT A",   tv, {a});
+
+    auto* and_atom = ggml_opencog_get_atom(atomspace, and_link);
+    auto* or_atom  = ggml_opencog_get_atom(atomspace, or_link);
+    auto* not_atom = ggml_opencog_get_atom(atomspace, not_link);
+
+    if (!and_atom || and_atom->type != GGML_OPENCOG_AND_LINK) {
+        std::cout << "FAILED (AndLink creation)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    if (!or_atom || or_atom->type != GGML_OPENCOG_OR_LINK) {
+        std::cout << "FAILED (OrLink creation)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    if (!not_atom || not_atom->type != GGML_OPENCOG_NOT_LINK) {
+        std::cout << "FAILED (NotLink creation)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // ImplicationLink and ListLink
+    uint64_t impl = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_IMPLICATION_LINK,
+                                          "A->B", tv, {a, b});
+    uint64_t list = ggml_opencog_add_atom(atomspace, GGML_OPENCOG_LIST_LINK,
+                                          "list(A,B)", tv, {a, b});
+
+    if (!ggml_opencog_get_atom(atomspace, impl) ||
+        ggml_opencog_get_atom(atomspace, impl)->type != GGML_OPENCOG_IMPLICATION_LINK) {
+        std::cout << "FAILED (ImplicationLink creation)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+    if (!ggml_opencog_get_atom(atomspace, list) ||
+        ggml_opencog_get_atom(atomspace, list)->type != GGML_OPENCOG_LIST_LINK) {
+        std::cout << "FAILED (ListLink creation)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    // Query by new types
+    auto vars = ggml_opencog_get_atoms_by_type(atomspace, GGML_OPENCOG_VARIABLE_NODE);
+    if (vars.size() != 1 || vars[0] != var) {
+        std::cout << "FAILED (VariableNode query)\n";
+        ggml_opencog_atomspace_free(atomspace);
+        return false;
+    }
+
+    ggml_opencog_atomspace_free(atomspace);
+    std::cout << "PASSED\n";
+    return true;
+}
+
 int main() {
     std::cout << "=== OpenCog GGML Tests ===\n\n";
-    
+
     int passed = 0;
-    int total = 11;
-    
-    if (test_atomspace_creation()) passed++;
-    if (test_atom_creation()) passed++;
-    if (test_atom_queries()) passed++;
-    if (test_links()) passed++;
-    if (test_reasoning()) passed++;
-    if (test_cogserver()) passed++;
-    if (test_embeddings()) passed++;
-    if (test_similarity()) passed++;
-    if (test_attention()) passed++;
-    if (test_hebbian_learning()) passed++;
-    if (test_temporal_reasoning()) passed++;
-    
+    int total = 0;
+
+    auto run = [&](bool(*fn)()) {
+        ++total;
+        if (fn()) ++passed;
+    };
+
+    run(test_atomspace_creation);
+    run(test_atom_creation);
+    run(test_atom_queries);
+    run(test_links);
+    run(test_reasoning);
+    run(test_cogserver);
+    run(test_embeddings);
+    run(test_similarity);
+    run(test_attention);
+    run(test_hebbian_learning);
+    run(test_temporal_reasoning);
+    run(test_remove_atom);
+    run(test_pln_direct_values);
+    run(test_pln_extended_rules);
+    run(test_variable_nodes);
+    run(test_forward_chaining);
+    run(test_backward_chaining);
+    run(test_find_matching);
+    run(test_atom_count);
+    run(test_new_atom_types);
+
     std::cout << "\n=== Results ===\n";
     std::cout << "Passed: " << passed << "/" << total << " tests\n";
-    
+
     if (passed == total) {
         std::cout << "All tests PASSED!\n";
         return 0;

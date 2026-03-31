@@ -662,6 +662,169 @@ void test_prime_extended() {
         REQUIRE(as.lookup_node("Planet") == h);
         REQUIRE(as.lookup_node("Missing") == cog::UNDEFINED_HANDLE);
     });
+
+    // TruthValue::to_string
+    TEST(prime_tv_to_string, {
+        cog::prime::TruthValue tv(0.75f, 0.9f);
+        std::string s = tv.to_string();
+        REQUIRE(s.find("TV") != std::string::npos);
+        REQUIRE(s.find("0.75") != std::string::npos);
+    });
+
+    // TruthValue::operator==
+    TEST(prime_tv_equality, {
+        cog::prime::TruthValue tv1(0.8f, 0.6f);
+        cog::prime::TruthValue tv2(0.8f, 0.6f);
+        cog::prime::TruthValue tv3(0.7f, 0.6f);
+        REQUIRE(tv1 == tv2);
+        REQUIRE(!(tv1 == tv3));
+    });
+
+    // TruthValue edge cases
+    TEST(prime_tv_zero_confidence_revision, {
+        cog::prime::TruthValue t1(0.9f, 0.0f);
+        cog::prime::TruthValue t2(0.1f, 0.0f);
+        auto rev = cog::prime::TruthValue::revise(t1, t2);
+        REQUIRE_NEAR(rev.confidence, 0.0f, 1e-5f);
+        REQUIRE_NEAR(rev.strength,   0.5f, 1e-5f);
+    });
+
+    // AtomSpace::decay_attention
+    TEST(prime_atomspace_decay_attention, {
+        cog::prime::AtomSpace as;
+        cog::Handle h = as.add_node(cog::AtomType::CONCEPT_NODE, "X");
+        as.stimulate(h, 0.8f);
+        auto* atom_before = as.get(h);
+        REQUIRE(atom_before != nullptr);
+        float sti_before = atom_before->av.sti;
+        REQUIRE(sti_before > 0.0f);
+
+        as.decay_attention(0.5f);  // aggressive decay
+        auto* atom_after = as.get(h);
+        REQUIRE(atom_after != nullptr);
+        REQUIRE(atom_after->av.sti < sti_before);
+    });
+
+    // AtomSpace::remove
+    TEST(prime_atomspace_remove_atom, {
+        cog::prime::AtomSpace as;
+        cog::Handle h = as.add_node(cog::AtomType::CONCEPT_NODE, "Temp");
+        REQUIRE(as.size() == 1);
+        REQUIRE(as.remove(h));
+        REQUIRE(as.size() == 0);
+        REQUIRE(as.get(h) == nullptr);
+    });
+
+    // AtomSpace::remove non-existent
+    TEST(prime_atomspace_remove_nonexistent, {
+        cog::prime::AtomSpace as;
+        REQUIRE(!as.remove(cog::UNDEFINED_HANDLE));
+        REQUIRE(!as.remove(999));
+    });
+
+    // PatternMatcher: link pattern matching with variables
+    TEST(prime_pattern_matcher_link_variable, {
+        cog::prime::AtomSpace as;
+        cog::Handle h_dog    = as.add_node(cog::AtomType::CONCEPT_NODE, "Dog");
+        cog::Handle h_animal = as.add_node(cog::AtomType::CONCEPT_NODE, "Animal");
+        cog::Handle h_var    = as.add_node(cog::AtomType::VARIABLE_NODE, "$X");
+        cog::Handle h_link   = as.add_link(cog::AtomType::INHERITANCE_LINK,
+                                            {h_dog, h_animal});
+        // Pattern: $X -> Animal
+        cog::Handle h_pattern = as.add_link(cog::AtomType::INHERITANCE_LINK,
+                                             {h_var, h_animal});
+        cog::prime::PatternMatcher pm(as);
+        cog::prime::Binding b;
+        REQUIRE(pm.match(h_pattern, h_link, b));
+        REQUIRE(b.get(h_var) == h_dog);
+    });
+
+    // PatternMatcher: inconsistent binding
+    TEST(prime_pattern_matcher_inconsistent_binding, {
+        cog::prime::AtomSpace as;
+        cog::Handle h_dog    = as.add_node(cog::AtomType::CONCEPT_NODE, "Dog");
+        cog::Handle h_cat    = as.add_node(cog::AtomType::CONCEPT_NODE, "Cat");
+        cog::Handle h_animal = as.add_node(cog::AtomType::CONCEPT_NODE, "Animal");
+        cog::Handle h_var    = as.add_node(cog::AtomType::VARIABLE_NODE, "$X");
+        cog::Handle h_link   = as.add_link(cog::AtomType::INHERITANCE_LINK,
+                                            {h_dog, h_animal});
+        // Pre-bind $X to Cat — should fail to match Dog->Animal
+        cog::prime::Binding b;
+        b.bind(h_var, h_cat);
+        cog::Handle h_pattern = as.add_link(cog::AtomType::INHERITANCE_LINK,
+                                             {h_var, h_animal});
+        cog::prime::PatternMatcher pm(as);
+        REQUIRE(!pm.match(h_pattern, h_link, b));
+    });
+
+    // OntogeneticState::update and try_advance
+    TEST(prime_ontogenetic_update_advance, {
+        cog::prime::OntogeneticState os;
+        REQUIRE(os.level == cog::prime::OntogeneticLevel::SCAFFOLD);
+        // Update fitness above threshold
+        for (int i = 0; i < 200; ++i) os.update(1.0f);
+        REQUIRE(os.fitness > 0.8f);
+        bool advanced = os.try_advance();
+        REQUIRE(advanced);
+        REQUIRE(os.level == cog::prime::OntogeneticLevel::REACTIVE);
+        REQUIRE(os.wisdom > 0.0f);
+    });
+
+    // OntogeneticState::to_string
+    TEST(prime_ontogenetic_to_string, {
+        cog::prime::OntogeneticState os;
+        std::string s = os.to_string();
+        REQUIRE(s.find("Scaffold") != std::string::npos);
+        REQUIRE(s.find("fitness") != std::string::npos);
+    });
+
+    // CognitiveCycle: multiple phase handlers
+    TEST(prime_cognitive_cycle_multi_phase, {
+        cog::prime::CognitiveCycle cycle;
+        int perceive_count = 0, act_count = 0;
+        cycle.on_phase(cog::prime::CyclePhase::PERCEIVE,
+            [&perceive_count](cog::prime::CognitiveState& st,
+                              cog::prime::DeclarativeMemory&,
+                              cog::prime::EpisodicMemory&,
+                              cog::prime::ProceduralMemory&) {
+                ++perceive_count;
+                st.arousal = 0.5f;
+            });
+        cycle.on_phase(cog::prime::CyclePhase::ACT,
+            [&act_count](cog::prime::CognitiveState& st,
+                         cog::prime::DeclarativeMemory&,
+                         cog::prime::EpisodicMemory&,
+                         cog::prime::ProceduralMemory&) {
+                ++act_count;
+                st.valence = 0.3f;
+            });
+        cycle.run(2);
+        REQUIRE(perceive_count == 2);
+        REQUIRE(act_count == 2);
+        REQUIRE_NEAR(cycle.state().arousal, 0.5f, 1e-5f);
+        REQUIRE_NEAR(cycle.state().valence, 0.3f, 1e-5f);
+    });
+
+    // EpisodicMemory: recall by context
+    TEST(prime_episodic_recall_context, {
+        cog::prime::EpisodicMemory em;
+        em.record("work", "meeting", 0.7f);
+        em.record("work", "lunch",   0.5f);
+        em.record("home", "dinner",  0.8f);
+        auto work_episodes = em.recall("work");
+        REQUIRE(work_episodes.size() == 2);
+        auto home_episodes = em.recall("home");
+        REQUIRE(home_episodes.size() == 1);
+        REQUIRE(home_episodes[0].event == "dinner");
+    });
+
+    // DeclarativeMemory: store and lookup fact
+    TEST(prime_declarative_store_lookup, {
+        cog::prime::DeclarativeMemory mem;
+        auto h = mem.store_fact("Paris", "capital_of", "France");
+        REQUIRE(h != cog::UNDEFINED_HANDLE);
+        REQUIRE(mem.size() == 4);  // subject + predicate + object + eval_link
+    });
 }
 
 // ─── cog::lux (extended) ─────────────────────────────────────────────────────
