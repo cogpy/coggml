@@ -636,3 +636,334 @@ void ggml_opencog_cogserver_start(struct ggml_opencog_cogserver* server) {
 void ggml_opencog_cogserver_stop(struct ggml_opencog_cogserver* server) {
     server->running = false;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared constants for inference thresholds
+// ─────────────────────────────────────────────────────────────────────────────
+// Minimum confidence for a derived truth value to be accepted
+static const float GGML_OPENCOG_MIN_DERIVE_CONFIDENCE = 1e-6f;
+// Minimum confidence for a goal to be considered proved
+static const float GGML_OPENCOG_MIN_PROVED_CONFIDENCE = 0.1f;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Extended PLN rules
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Conjunction (AND): P(A AND B) = s_A * s_B, conf = min(c_A, c_B)
+struct ggml_opencog_truth_value ggml_opencog_pln_conjunction(
+        struct ggml_opencog_truth_value tv1,
+        struct ggml_opencog_truth_value tv2) {
+    struct ggml_opencog_truth_value result;
+    result.strength   = tv1.strength * tv2.strength;
+    result.confidence = fminf(tv1.confidence, tv2.confidence);
+    return result;
+}
+
+// Disjunction (OR): P(A OR B) = 1 - (1-s_A)*(1-s_B), conf = min(c_A, c_B)
+struct ggml_opencog_truth_value ggml_opencog_pln_disjunction(
+        struct ggml_opencog_truth_value tv1,
+        struct ggml_opencog_truth_value tv2) {
+    struct ggml_opencog_truth_value result;
+    result.strength   = 1.0f - (1.0f - tv1.strength) * (1.0f - tv2.strength);
+    result.confidence = fminf(tv1.confidence, tv2.confidence);
+    return result;
+}
+
+// Negation (NOT): P(NOT A) = 1 - s_A, conf unchanged
+struct ggml_opencog_truth_value ggml_opencog_pln_negation(
+        struct ggml_opencog_truth_value tv) {
+    struct ggml_opencog_truth_value result;
+    result.strength   = 1.0f - tv.strength;
+    result.confidence = tv.confidence;
+    return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Forward Chaining
+// Apply PLN deduction transitively over InheritanceLinks:
+//   A→B and B→C ⟹ A→C  (if not already present or new TV is stronger)
+// Returns IDs of newly added atoms.
+// ─────────────────────────────────────────────────────────────────────────────
+std::vector<uint64_t> ggml_opencog_forward_chain(
+        struct ggml_opencog_atomspace* atomspace,
+        int max_iterations) {
+    std::vector<uint64_t> derived_atoms;
+
+    for (int iter = 0; iter < max_iterations; ++iter) {
+        bool new_derivation = false;
+
+        // Collect all inheritance links (snapshot to avoid iterator invalidation)
+        std::vector<uint64_t> inheritance_links =
+            ggml_opencog_get_atoms_by_type(atomspace, GGML_OPENCOG_INHERITANCE_LINK);
+
+        // For each pair (A→B) and (B→C), derive (A→C)
+        for (size_t i = 0; i < inheritance_links.size(); ++i) {
+            auto* ab_link = ggml_opencog_get_atom(atomspace, inheritance_links[i]);
+            if (!ab_link || ab_link->outgoing.size() < 2) continue;
+
+            uint64_t a_id = ab_link->outgoing[0];
+            uint64_t b_id = ab_link->outgoing[1];
+
+            for (size_t j = 0; j < inheritance_links.size(); ++j) {
+                if (i == j) continue;
+                auto* bc_link = ggml_opencog_get_atom(atomspace, inheritance_links[j]);
+                if (!bc_link || bc_link->outgoing.size() < 2) continue;
+
+                // Check B→C: first element must be the same B
+                if (bc_link->outgoing[0] != b_id) continue;
+
+                uint64_t c_id = bc_link->outgoing[1];
+                if (c_id == a_id) continue;  // avoid trivial A→A
+
+                // Derive A→C via PLN deduction
+                struct ggml_opencog_truth_value tv_ac =
+                    ggml_opencog_pln_deduction(ab_link->tv, bc_link->tv);
+
+                // Only add if TV is meaningful
+                if (tv_ac.confidence < GGML_OPENCOG_MIN_DERIVE_CONFIDENCE) continue;
+
+                // Build a unique name for this derived link
+                auto* atom_a = ggml_opencog_get_atom(atomspace, a_id);
+                auto* atom_c = ggml_opencog_get_atom(atomspace, c_id);
+                if (!atom_a || !atom_c) continue;
+
+                std::string derived_name =
+                    std::string(atom_a->name) + "->" + std::string(atom_c->name)
+                    + "(derived)";
+
+                // Check for existing link between A and C
+                bool already_present = false;
+                std::vector<uint64_t> existing =
+                    ggml_opencog_get_atoms_by_type(atomspace,
+                                                   GGML_OPENCOG_INHERITANCE_LINK);
+                for (uint64_t eid : existing) {
+                    auto* elink = ggml_opencog_get_atom(atomspace, eid);
+                    if (elink && elink->outgoing.size() >= 2 &&
+                        elink->outgoing[0] == a_id &&
+                        elink->outgoing[1] == c_id) {
+                        // Update TV if new derivation is more confident
+                        if (tv_ac.confidence > elink->tv.confidence) {
+                            elink->tv = tv_ac;
+                        }
+                        already_present = true;
+                        break;
+                    }
+                }
+
+                if (!already_present) {
+                    uint64_t new_id = ggml_opencog_add_atom(
+                        atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                        derived_name.c_str(), tv_ac, {a_id, c_id});
+                    derived_atoms.push_back(new_id);
+                    new_derivation = true;
+                }
+            }
+        }
+
+        if (!new_derivation) break;
+    }
+
+    return derived_atoms;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Backward Chaining
+// Attempt to prove that goal_id is derivable from the atomspace using PLN.
+// Strategy: goal is an atom that we want to show exists (with high TV).
+//   1. If goal already has sufficient confidence, return true immediately.
+//   2. Otherwise, look for an intermediate B such that A→B and B→goal_id.
+//   3. Recursively try to prove A→B, then derive A→goal_id.
+// Returns true if goal is proved. Fills derivation_path with IDs used.
+// ─────────────────────────────────────────────────────────────────────────────
+bool ggml_opencog_backward_chain(
+        struct ggml_opencog_atomspace* atomspace,
+        uint64_t goal_id,
+        int max_depth,
+        std::vector<uint64_t>& derivation_path) {
+    if (max_depth <= 0) return false;
+
+    auto* goal = ggml_opencog_get_atom(atomspace, goal_id);
+    if (!goal) return false;
+
+    // Base case: goal already exists with sufficient confidence
+    if (goal->tv.confidence >= GGML_OPENCOG_MIN_PROVED_CONFIDENCE) {
+        derivation_path.push_back(goal_id);
+        return true;
+    }
+
+    // For an InheritanceLink goal (A→C), look for intermediate B
+    if (goal->type == GGML_OPENCOG_INHERITANCE_LINK &&
+        goal->outgoing.size() >= 2) {
+        uint64_t a_id = goal->outgoing[0];
+        uint64_t c_id = goal->outgoing[1];
+
+        // Search for B: look for all atoms B such that A→B exists
+        std::vector<uint64_t> links =
+            ggml_opencog_get_atoms_by_type(atomspace, GGML_OPENCOG_INHERITANCE_LINK);
+
+        for (uint64_t link_id : links) {
+            auto* link = ggml_opencog_get_atom(atomspace, link_id);
+            if (!link || link->outgoing.size() < 2) continue;
+            if (link->outgoing[0] != a_id) continue;  // must start from A
+
+            uint64_t b_id = link->outgoing[1];
+            if (b_id == c_id || b_id == a_id) continue;
+
+            // Look for B→C
+            for (uint64_t link2_id : links) {
+                auto* link2 = ggml_opencog_get_atom(atomspace, link2_id);
+                if (!link2 || link2->outgoing.size() < 2) continue;
+                if (link2->outgoing[0] != b_id) continue;
+                if (link2->outgoing[1] != c_id) continue;
+
+                // Found A→B and B→C: derive A→C via deduction
+                struct ggml_opencog_truth_value tv_ac =
+                    ggml_opencog_pln_deduction(link->tv, link2->tv);
+
+                if (tv_ac.confidence >= GGML_OPENCOG_MIN_PROVED_CONFIDENCE) {
+                    // Update goal TV
+                    goal->tv = tv_ac;
+                    derivation_path.push_back(link_id);
+                    derivation_path.push_back(link2_id);
+                    derivation_path.push_back(goal_id);
+                    return true;
+                }
+            }
+        }
+
+        // Recursive: try to prove sub-goals
+        for (uint64_t link_id : links) {
+            auto* link = ggml_opencog_get_atom(atomspace, link_id);
+            if (!link || link->outgoing.size() < 2) continue;
+            if (link->outgoing[0] != a_id) continue;
+
+            uint64_t b_id = link->outgoing[1];
+            if (b_id == c_id || b_id == a_id) continue;
+
+            // Build B→C sub-goal
+            auto* atom_b = ggml_opencog_get_atom(atomspace, b_id);
+            auto* atom_c = ggml_opencog_get_atom(atomspace, c_id);
+            if (!atom_b || !atom_c) continue;
+
+            std::string sub_goal_name =
+                std::string(atom_b->name) + "->" + std::string(atom_c->name) +
+                "(subgoal)";
+            struct ggml_opencog_truth_value zero_tv = {0.0f, 0.0f};
+            uint64_t sub_goal_id = ggml_opencog_add_atom(
+                atomspace, GGML_OPENCOG_INHERITANCE_LINK,
+                sub_goal_name.c_str(), zero_tv, {b_id, c_id});
+
+            std::vector<uint64_t> sub_path;
+            if (ggml_opencog_backward_chain(atomspace, sub_goal_id,
+                                            max_depth - 1, sub_path)) {
+                auto* derived_bc = ggml_opencog_get_atom(atomspace, sub_goal_id);
+                if (derived_bc && derived_bc->tv.confidence >= GGML_OPENCOG_MIN_PROVED_CONFIDENCE) {
+                    struct ggml_opencog_truth_value tv_ac =
+                        ggml_opencog_pln_deduction(link->tv, derived_bc->tv);
+                    goal->tv = tv_ac;
+                    derivation_path.insert(derivation_path.end(),
+                                           sub_path.begin(), sub_path.end());
+                    derivation_path.push_back(goal_id);
+                    return tv_ac.confidence >= GGML_OPENCOG_MIN_PROVED_CONFIDENCE;
+                }
+            }
+            // Clean up unsuccessful sub-goal
+            ggml_opencog_remove_atom(atomspace, sub_goal_id);
+        }
+    }
+
+    // For concept nodes: check if they appear as conclusions of any rule
+    if (goal->type == GGML_OPENCOG_CONCEPT_NODE ||
+        goal->type == GGML_OPENCOG_PREDICATE_NODE) {
+        // Look for evaluation links that assert a property of goal
+        std::vector<uint64_t> eval_links =
+            ggml_opencog_get_atoms_by_type(atomspace, GGML_OPENCOG_EVALUATION_LINK);
+        for (uint64_t eid : eval_links) {
+            auto* elink = ggml_opencog_get_atom(atomspace, eid);
+            if (!elink) continue;
+            for (uint64_t out_id : elink->outgoing) {
+                if (out_id == goal_id && elink->tv.confidence >= GGML_OPENCOG_MIN_PROVED_CONFIDENCE) {
+                    derivation_path.push_back(eid);
+                    derivation_path.push_back(goal_id);
+                    goal->tv = elink->tv;
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Variable binding pattern matching
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Internal recursive helper
+static bool match_recursive(
+        struct ggml_opencog_atomspace* atomspace,
+        uint64_t pattern_id,
+        uint64_t candidate_id,
+        struct ggml_opencog_binding* binding) {
+    if (pattern_id == candidate_id) return true;  // trivial match
+
+    auto* pattern   = ggml_opencog_get_atom(atomspace, pattern_id);
+    auto* candidate = ggml_opencog_get_atom(atomspace, candidate_id);
+
+    if (!pattern || !candidate) return false;
+
+    // Variable node matches any atom; record binding
+    if (pattern->type == GGML_OPENCOG_VARIABLE_NODE) {
+        return binding->bind(pattern_id, candidate_id);
+    }
+
+    // Type must match for non-variable patterns
+    if (pattern->type != candidate->type) return false;
+
+    // For nodes, name must also match (non-variable)
+    if (pattern->outgoing.empty() && candidate->outgoing.empty()) {
+        return std::string(pattern->name) == std::string(candidate->name);
+    }
+
+    // For links, recursively match outgoing sets
+    if (pattern->outgoing.size() != candidate->outgoing.size()) return false;
+
+    for (size_t i = 0; i < pattern->outgoing.size(); ++i) {
+        if (!match_recursive(atomspace, pattern->outgoing[i],
+                             candidate->outgoing[i], binding)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ggml_opencog_match_with_binding(
+        struct ggml_opencog_atomspace* atomspace,
+        uint64_t pattern_id,
+        uint64_t candidate_id,
+        struct ggml_opencog_binding* binding) {
+    return match_recursive(atomspace, pattern_id, candidate_id, binding);
+}
+
+std::vector<std::pair<uint64_t, struct ggml_opencog_binding>>
+ggml_opencog_find_matching(
+        struct ggml_opencog_atomspace* atomspace,
+        uint64_t pattern_id) {
+    std::vector<std::pair<uint64_t, struct ggml_opencog_binding>> results;
+
+    auto* pattern = ggml_opencog_get_atom(atomspace, pattern_id);
+    if (!pattern) return results;
+
+    for (const auto& kv : atomspace->atoms) {
+        struct ggml_opencog_binding binding;
+        if (match_recursive(atomspace, pattern_id, kv.first, &binding)) {
+            results.emplace_back(kv.first, binding);
+        }
+    }
+    return results;
+}
+
+// Get total number of atoms in the atomspace
+size_t ggml_opencog_atom_count(struct ggml_opencog_atomspace* atomspace) {
+    return atomspace->atoms.size();
+}
