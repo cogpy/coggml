@@ -409,6 +409,86 @@ void test_lux() {
         REQUIRE(node->get_attr("color") == "blue");
         REQUIRE(node->get_attr("missing", "default") == "default");
     });
+
+    TEST(classify_evidence_types, {
+        REQUIRE(std::string(cog::lux::classify_evidence(cog::lux::EdgeType::INHERITANCE)) == "taxonomic");
+        REQUIRE(std::string(cog::lux::classify_evidence(cog::lux::EdgeType::SIMILARITY))  == "semantic");
+        REQUIRE(std::string(cog::lux::classify_evidence(cog::lux::EdgeType::CAUSAL))      == "causal");
+        REQUIRE(std::string(cog::lux::classify_evidence(cog::lux::EdgeType::TEMPORAL))    == "temporal");
+    });
+
+    TEST(index_subsystems, {
+        cog::lux::LuxGraph g;
+        auto c1 = g.add_node(cog::lux::NodeType::CONCEPT,   "c1");
+        auto c2 = g.add_node(cog::lux::NodeType::CONCEPT,   "c2");
+        auto p1 = g.add_node(cog::lux::NodeType::PREDICATE, "p1");
+        auto idx = cog::lux::index_subsystems(g);
+        REQUIRE(idx.count(cog::lux::NodeType::CONCEPT)   > 0);
+        REQUIRE(idx.count(cog::lux::NodeType::PREDICATE) > 0);
+        REQUIRE(idx[cog::lux::NodeType::CONCEPT].size()   == 2);
+        REQUIRE(idx[cog::lux::NodeType::PREDICATE].size() == 1);
+        (void)c1; (void)c2; (void)p1;
+    });
+
+    TEST(gat_layer_forward, {
+        // Minimal single-layer GAT: 2 nodes, no edges, 4-dim input -> 4-dim output
+        cog::lux::GATLayer layer(4, 4);
+        cog::lux::LuxGraph g;
+        auto n1 = g.add_node(cog::lux::NodeType::CONCEPT, "n1");
+        auto n2 = g.add_node(cog::lux::NodeType::CONCEPT, "n2");
+
+        std::unordered_map<cog::lux::NodeId, std::vector<float>> feats;
+        feats[n1] = {1.0f, 0.0f, 0.0f, 0.0f};
+        feats[n2] = {0.0f, 1.0f, 0.0f, 0.0f};
+
+        auto h1 = layer.forward(n1, feats, {});
+        REQUIRE(h1.size() == 4);
+        auto h2 = layer.forward(n2, feats, {n1});  // n1 is a neighbour
+        REQUIRE(h2.size() == 4);
+    });
+
+    TEST(gat_classifier_forward, {
+        cog::lux::GATClassifier::Config cfg;
+        cfg.input_dim  = 8;
+        cfg.hidden_dim = 8;
+        cfg.output_dim = 4;
+        cfg.num_heads  = 2;
+        cog::lux::GATClassifier gat(cfg);
+
+        cog::lux::LuxGraph g;
+        auto a = g.add_node(cog::lux::NodeType::CONCEPT,   "A");
+        auto b = g.add_node(cog::lux::NodeType::CONCEPT,   "B");
+        auto c = g.add_node(cog::lux::NodeType::PREDICATE, "C");
+        g.add_edge(cog::lux::EdgeType::INHERITANCE, a, b);
+        g.add_edge(cog::lux::EdgeType::EVALUATION,  b, c);
+
+        std::unordered_map<cog::lux::NodeId, std::vector<float>> feats;
+        feats[a] = {1.f,0.f,0.f,0.f,0.f,0.f,0.f,0.f};
+        feats[b] = {0.f,1.f,0.f,0.f,0.f,0.f,0.f,0.f};
+        feats[c] = {0.f,0.f,1.f,0.f,0.f,0.f,0.f,0.f};
+
+        auto embeddings = gat.forward(g, feats);
+        REQUIRE(embeddings.size() == 3);
+        REQUIRE(embeddings[a].size() == 4);
+        REQUIRE(embeddings[b].size() == 4);
+        REQUIRE(embeddings[c].size() == 4);
+    });
+
+    TEST(link_predict_score, {
+        // Build embeddings manually and check link_predict returns [0,1]
+        std::unordered_map<cog::lux::NodeId, std::vector<float>> emb;
+        emb[1] = {1.0f, 0.0f};
+        emb[2] = {0.0f, 1.0f};
+        emb[3] = {1.0f, 0.5f};
+        float s12 = cog::lux::link_predict(emb, 1, 2);
+        float s13 = cog::lux::link_predict(emb, 1, 3);
+        REQUIRE(s12 >= 0.0f && s12 <= 1.0f);
+        REQUIRE(s13 >= 0.0f && s13 <= 1.0f);
+        // node 3 has positive overlap with node 1, so score should be > 0.5
+        REQUIRE(s13 > 0.5f);
+        // node 2 is orthogonal to node 1, so score ≈ 0.5 (dot=0 → sigmoid(0)=0.5)
+        REQUIRE_NEAR(s12, 0.5f, 0.01f);
+    });
 }
 
 // ─── cog::glow ────────────────────────────────────────────────────────────────
@@ -553,6 +633,35 @@ void test_gml() {
             float    f32 = cog::gml::f16_to_f32(f16);
             REQUIRE_NEAR(f32, v, std::fabs(v) * 0.01f + 0.001f);
         }
+    });
+
+    TEST(safetensors_parse_json, {
+        // Minimal synthetic SafeTensors JSON header
+        std::string json = R"({"__metadata__":{"format":"pt"},"weight":{"dtype":"F32","shape":[2,3],"data_offsets":[0,24]},"bias":{"dtype":"F32","shape":[3],"data_offsets":[24,36]}})";
+        auto hdr = cog::gml::parse_safetensors_json(json);
+        REQUIRE(hdr.size() == 2);
+        const auto* w = hdr.find("weight");
+        REQUIRE(w != nullptr);
+        REQUIRE(w->dtype == "F32");
+        REQUIRE(w->shape.size() == 2);
+        REQUIRE(w->shape[0] == 2);
+        REQUIRE(w->shape[1] == 3);
+        REQUIRE(w->data_begin == 0);
+        REQUIRE(w->data_end   == 24);
+        REQUIRE(w->element_count() == 6);
+        const auto* b = hdr.find("bias");
+        REQUIRE(b != nullptr);
+        REQUIRE(b->shape.size() == 1);
+        REQUIRE(b->shape[0] == 3);
+        REQUIRE(b->element_count() == 3);
+        REQUIRE(hdr.find("missing") == nullptr);
+    });
+
+    TEST(safetensors_load_missing_file, {
+        // Loading a non-existent file should return an empty header gracefully
+        auto hdr = cog::gml::load_safetensors_metadata("/tmp/nonexistent_safetensors_12345.safetensors");
+        REQUIRE(hdr.size() == 0);
+        REQUIRE(hdr.raw_json.empty());
     });
 }
 
