@@ -575,6 +575,196 @@ private:
     }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SafeTensors metadata loader
+//
+// The SafeTensors format stores a JSON header at the start of a .safetensors
+// file:  [8-byte little-endian header_len] [header_len bytes of UTF-8 JSON]
+// The JSON maps tensor names to {"dtype":…, "shape":[…], "data_offsets":[…]}.
+//
+// This loader reads the header only (no binary weights), providing fast
+// tensor metadata inspection without needing to map the full file.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Metadata for a single SafeTensors tensor entry
+struct SafeTensorMeta {
+    std::string          name;           // tensor name
+    std::string          dtype;          // e.g. "F32", "F16", "BF16"
+    std::vector<int64_t> shape;          // dimension sizes
+    int64_t              data_begin;     // byte offset of data start (relative to data region)
+    int64_t              data_end;       // byte offset of data end
+
+    int64_t element_count() const {
+        int64_t n = 1;
+        for (int64_t s : shape) n *= s;
+        return n;
+    }
+};
+
+// Result of parsing a SafeTensors file header
+struct SafeTensorsHeader {
+    std::vector<SafeTensorMeta> tensors;  // all tensor entries (ordered by file position)
+    std::string                 raw_json; // raw JSON string (for debugging / re-use)
+
+    // Look up a tensor by name.  Returns nullptr if not found.
+    const SafeTensorMeta* find(const std::string& name) const {
+        for (const auto& t : tensors)
+            if (t.name == name) return &t;
+        return nullptr;
+    }
+
+    size_t size() const { return tensors.size(); }
+};
+
+namespace detail {
+
+// Minimal JSON string-value extractor — no external dependencies.
+// Finds the value of a JSON string key in a flat JSON object fragment.
+// Returns empty string if not found.
+inline std::string json_string_value(const std::string& json,
+                                     const std::string& key) {
+    std::string needle = "\"" + key + "\"";
+    auto pos = json.find(needle);
+    if (pos == std::string::npos) return "";
+    pos += needle.size();
+    // skip whitespace and colon
+    while (pos < json.size() && (json[pos] == ' ' || json[pos] == ':' || json[pos] == '\t')) ++pos;
+    if (pos >= json.size() || json[pos] != '"') return "";
+    ++pos;  // skip opening quote
+    std::string val;
+    while (pos < json.size() && json[pos] != '"') {
+        if (json[pos] == '\\') { ++pos; }  // skip escape
+        val += json[pos++];
+    }
+    return val;
+}
+
+// Parse a JSON integer array like [1024, 768] into a vector<int64_t>
+inline std::vector<int64_t> json_int_array(const std::string& json,
+                                            const std::string& key) {
+    std::string needle = "\"" + key + "\"";
+    auto pos = json.find(needle);
+    if (pos == std::string::npos) return {};
+    pos += needle.size();
+    while (pos < json.size() && json[pos] != '[') ++pos;
+    if (pos >= json.size()) return {};
+    ++pos;  // skip '['
+    std::vector<int64_t> vals;
+    while (pos < json.size() && json[pos] != ']') {
+        while (pos < json.size() && (json[pos] == ' ' || json[pos] == ',')) ++pos;
+        if (pos >= json.size() || json[pos] == ']') break;
+        char* end;
+        int64_t v = static_cast<int64_t>(std::strtoll(&json[pos], &end, 10));
+        if (end == &json[pos]) break;
+        vals.push_back(v);
+        pos = static_cast<size_t>(end - &json[0]);
+    }
+    return vals;
+}
+
+// Parse [begin, end] offset pair from "data_offsets":[begin,end]
+inline std::pair<int64_t,int64_t> json_offset_pair(const std::string& json) {
+    auto vec = json_int_array(json, "data_offsets");
+    if (vec.size() >= 2) return {vec[0], vec[1]};
+    if (vec.size() == 1) return {vec[0], vec[0]};
+    return {0, 0};
+}
+
+// Split top-level JSON object keys: iterate over "key":{...} pairs in order.
+// Calls callback(key, value_fragment) for each.  Not fully general but
+// sufficient for the flat SafeTensors header format.
+inline void json_foreach_key(const std::string& json,
+                              const std::function<void(const std::string&,
+                                                       const std::string&)>& cb) {
+    size_t pos = 0;
+    // skip leading '{'
+    while (pos < json.size() && json[pos] != '{') ++pos;
+    if (pos >= json.size()) return;
+    ++pos;
+
+    while (pos < json.size()) {
+        // find key
+        while (pos < json.size() && json[pos] != '"' && json[pos] != '}') ++pos;
+        if (pos >= json.size() || json[pos] == '}') break;
+        ++pos;  // skip '"'
+        std::string key;
+        while (pos < json.size() && json[pos] != '"') key += json[pos++];
+        if (pos < json.size()) ++pos;  // skip closing '"'
+        // skip ':' and whitespace
+        while (pos < json.size() && (json[pos] == ':' || json[pos] == ' ')) ++pos;
+        if (pos >= json.size()) break;
+        // collect value (object or string or number)
+        std::string val;
+        if (json[pos] == '{') {
+            int depth = 0;
+            size_t start = pos;
+            while (pos < json.size()) {
+                if (json[pos] == '{') ++depth;
+                else if (json[pos] == '}') { --depth; if (depth == 0) { ++pos; break; } }
+                ++pos;
+            }
+            val = json.substr(start, pos - start);
+        } else {
+            size_t start = pos;
+            while (pos < json.size() && json[pos] != ',' && json[pos] != '}') ++pos;
+            val = json.substr(start, pos - start);
+        }
+        cb(key, val);
+        // skip comma
+        while (pos < json.size() && (json[pos] == ',' || json[pos] == ' ')) ++pos;
+    }
+}
+
+} // namespace detail
+
+// Parse SafeTensors header JSON string into a SafeTensorsHeader.
+// The JSON is the raw header extracted from a .safetensors file.
+inline SafeTensorsHeader parse_safetensors_json(const std::string& json) {
+    SafeTensorsHeader hdr;
+    hdr.raw_json = json;
+    detail::json_foreach_key(json, [&](const std::string& key, const std::string& val) {
+        if (key == "__metadata__") return;  // skip metadata dict
+        SafeTensorMeta m;
+        m.name  = key;
+        m.dtype = detail::json_string_value(val, "dtype");
+        m.shape = detail::json_int_array(val, "shape");
+        auto off = detail::json_offset_pair(val);
+        m.data_begin = off.first;
+        m.data_end   = off.second;
+        hdr.tensors.push_back(m);
+    });
+    return hdr;
+}
+
+// Read and parse the SafeTensors header from a file path.
+// Returns an empty header (with empty raw_json) on read error.
+// Only the header bytes are read — the weight data is not loaded.
+inline SafeTensorsHeader load_safetensors_metadata(const std::string& path) {
+    // We use C stdio to stay dependency-free
+    FILE* f = std::fopen(path.c_str(), "rb");
+    if (!f) return SafeTensorsHeader{};
+
+    // Read 8-byte little-endian header length
+    uint8_t len_bytes[8] = {};
+    if (std::fread(len_bytes, 1, 8, f) != 8) { std::fclose(f); return SafeTensorsHeader{}; }
+    uint64_t hlen = 0;
+    for (int i = 0; i < 8; ++i)
+        hlen |= (static_cast<uint64_t>(len_bytes[i]) << (8 * i));
+
+    if (hlen == 0 || hlen > 64 * 1024 * 1024ULL) { // sanity cap: 64 MiB header
+        std::fclose(f);
+        return SafeTensorsHeader{};
+    }
+
+    std::string json(static_cast<size_t>(hlen), '\0');
+    if (std::fread(&json[0], 1, static_cast<size_t>(hlen), f) != static_cast<size_t>(hlen)) {
+        std::fclose(f);
+        return SafeTensorsHeader{};
+    }
+    std::fclose(f);
+    return parse_safetensors_json(json);
+}
+
 }} // namespace cog::gml
 
 #endif // COG_GML_HPP

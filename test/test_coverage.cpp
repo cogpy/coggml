@@ -542,6 +542,41 @@ void test_gml_extended() {
         REQUIRE(param[0] < 1.0f); // should have moved from initial 1.0
         REQUIRE(param[1] < 2.0f); // should have moved from initial 2.0
     });
+
+    TEST(safetensors_parse_metadata, {
+        std::string json =
+            R"({"__metadata__":{"format":"pt"},)"
+            R"("encoder.weight":{"dtype":"F32","shape":[512,256],"data_offsets":[0,524288]},)"
+            R"("encoder.bias":{"dtype":"F32","shape":[512],"data_offsets":[524288,526336]}})";
+        auto hdr = cog::gml::parse_safetensors_json(json);
+        REQUIRE(hdr.size() == 2);
+        const auto* w = hdr.find("encoder.weight");
+        REQUIRE(w != nullptr);
+        REQUIRE(w->dtype == "F32");
+        REQUIRE(w->shape.size() == 2);
+        REQUIRE(w->shape[0] == 512);
+        REQUIRE(w->shape[1] == 256);
+        REQUIRE(w->element_count() == 512 * 256);
+        REQUIRE(w->data_begin == 0);
+        REQUIRE(w->data_end   == 524288);
+        const auto* b = hdr.find("encoder.bias");
+        REQUIRE(b != nullptr);
+        REQUIRE(b->shape.size() == 1);
+        REQUIRE(b->shape[0] == 512);
+        REQUIRE(b->element_count() == 512);
+    });
+
+    TEST(safetensors_missing_key, {
+        std::string json = R"({"weight":{"dtype":"BF16","shape":[4,4],"data_offsets":[0,32]}})";
+        auto hdr = cog::gml::parse_safetensors_json(json);
+        REQUIRE(hdr.find("bias") == nullptr);
+        REQUIRE(hdr.find("weight") != nullptr);
+    });
+
+    TEST(safetensors_load_nonexistent, {
+        auto hdr = cog::gml::load_safetensors_metadata("/tmp/__no_such_file_safetensors__.safetensors");
+        REQUIRE(hdr.size() == 0);
+    });
 }
 
 // ─── cog::prime (extended) ───────────────────────────────────────────────────
@@ -907,6 +942,78 @@ void test_lux_extended() {
         const cog::lux::LuxEdge* e = g.edge(eid);
         REQUIRE(e != nullptr);
         REQUIRE_NEAR(e->weight, 0.75f, 1e-5f);
+    });
+
+    TEST(lux_classify_evidence, {
+        REQUIRE(std::string(cog::lux::classify_evidence(cog::lux::EdgeType::INHERITANCE)) == "taxonomic");
+        REQUIRE(std::string(cog::lux::classify_evidence(cog::lux::EdgeType::CAUSAL))      == "causal");
+        REQUIRE(std::string(cog::lux::classify_evidence(cog::lux::EdgeType::SIMILARITY))  == "semantic");
+        REQUIRE(std::string(cog::lux::classify_evidence(cog::lux::EdgeType::TEMPORAL))    == "temporal");
+        REQUIRE(std::string(cog::lux::classify_evidence(cog::lux::EdgeType::ATTENTION))   == "attentional");
+    });
+
+    TEST(lux_index_subsystems, {
+        cog::lux::LuxGraph g;
+        g.add_node(cog::lux::NodeType::CONCEPT,    "cat");
+        g.add_node(cog::lux::NodeType::CONCEPT,    "dog");
+        g.add_node(cog::lux::NodeType::PREDICATE,  "runs");
+        g.add_node(cog::lux::NodeType::GOAL,       "goal1");
+        auto idx = cog::lux::index_subsystems(g);
+        REQUIRE(idx.count(cog::lux::NodeType::CONCEPT)   > 0);
+        REQUIRE(idx[cog::lux::NodeType::CONCEPT].size()   == 2);
+        REQUIRE(idx[cog::lux::NodeType::PREDICATE].size() == 1);
+        REQUIRE(idx[cog::lux::NodeType::GOAL].size()      == 1);
+        // Types not present should be absent from index
+        REQUIRE(idx.count(cog::lux::NodeType::ACTION) == 0);
+    });
+
+    TEST(lux_gat_classifier_output_dims, {
+        cog::lux::GATClassifier::Config cfg;
+        cfg.input_dim  = 4;
+        cfg.hidden_dim = 8;
+        cfg.output_dim = 4;
+        cfg.num_heads  = 2;
+        cog::lux::GATClassifier gat(cfg);
+
+        cog::lux::LuxGraph g;
+        auto n1 = g.add_node(cog::lux::NodeType::CONCEPT, "x");
+        auto n2 = g.add_node(cog::lux::NodeType::CONCEPT, "y");
+        g.add_edge(cog::lux::EdgeType::INHERITANCE, n1, n2);
+
+        std::unordered_map<cog::lux::NodeId, std::vector<float>> feats;
+        feats[n1] = {1.f, 0.f, 0.f, 0.f};
+        feats[n2] = {0.f, 1.f, 0.f, 0.f};
+
+        auto emb = gat.forward(g, feats);
+        REQUIRE(emb.size() == 2);
+        REQUIRE(emb[n1].size() == static_cast<size_t>(cfg.output_dim));
+        REQUIRE(emb[n2].size() == static_cast<size_t>(cfg.output_dim));
+    });
+
+    TEST(lux_link_predict_orthogonal, {
+        std::unordered_map<cog::lux::NodeId, std::vector<float>> emb;
+        emb[1] = {1.0f, 0.0f, 0.0f};
+        emb[2] = {0.0f, 1.0f, 0.0f};
+        // Orthogonal embeddings → dot=0 → sigmoid(0)=0.5
+        float score = cog::lux::link_predict(emb, 1, 2);
+        REQUIRE_NEAR(score, 0.5f, 0.01f);
+    });
+
+    TEST(lux_link_predict_parallel, {
+        std::unordered_map<cog::lux::NodeId, std::vector<float>> emb;
+        emb[1] = {1.0f, 0.0f};
+        emb[2] = {2.0f, 0.0f};
+        // Positive dot product → score > 0.5
+        float score = cog::lux::link_predict(emb, 1, 2);
+        REQUIRE(score > 0.5f);
+    });
+
+    TEST(lux_link_predict_missing_node, {
+        std::unordered_map<cog::lux::NodeId, std::vector<float>> emb;
+        emb[1] = {1.0f, 0.0f};
+        // node 99 is missing → returns 0.0
+        float score = cog::lux::link_predict(emb, 1, 99);
+        REQUIRE_NEAR(score, 0.0f, 1e-6f);
     });
 }
 
