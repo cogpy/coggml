@@ -1,0 +1,51 @@
+{
+  "tokenizer": {
+    "type": "dte_bpe",
+    "vocab_size": 8192,
+    "tokenizer_dir": "NanEcho/dte_tokenizer",
+    "model_max_length": 1024,
+    "bos_token": "<|startoftext|>",
+    "eos_token": "<|endoftext|>",
+    "pad_token": "<|pad|>",
+    "unk_token": "<|endoftext|>"
+  },
+  "special_tokens": {
+    "control": ["<|pad|>", "<|endoftext|>", "<|startoftext|>"],
+    "cognitive": ["<|echo|>", "<|deep_tree|>", "<|reservoir|>", "<|membrane|>", "<|hypergraph|>", "<|atomspace|>"],
+    "aar_triad": ["<|agent|>", "<|arena|>", "<|relation|>"],
+    "cognitive_state": ["<|introspect|>", "<|perceive|>", "<|act|>", "<|simulate|>"],
+    "echobeat": ["<|echobeat_start|>", "<|echobeat_end|>", "<|step|>"],
+    "persona": ["<|persona|>", "<|cognitive|>", "<|adaptive|>", "<|recursive|>", "<|synergistic|>", "<|holographic|>"],
+    "structural": ["<|feedback|>", "<|feedforward|>", "<|resonance|>", "<|entelechy|>"],
+    "conversation": ["<|user|>", "<|echo_self|>", "<|system|>"],
+    "architecture": ["<|b9|>", "<|p9|>", "<|j9|>"]
+  },
+  "model_overrides": {
+    "vocab_size": 8192,
+    "n_embd": 256,
+    "n_head": 4,
+    "n_layer": 4,
+    "block_size": 1024,
+    "dropout": 0.1,
+    "bias": true
+  },
+  "training_overrides": {
+    "data_dir": "data/nanecho_dte",
+    "batch_size": 8,
+    "learning_rate": 0.0003,
+    "warmup_iters": 100,
+    "weight_decay": 0.1,
+    "grad_clip": 1.0
+  },
+  "corpus_info": {
+    "sources": [
+      "training_dataset_dtesnn.jsonl",
+      "deep_tree_echo_dan_conversation.jsonl"
+    ],
+    "total_tokens": 590886,
+    "train_tokens": 531798,
+    "val_tokens": 59088,
+    "unique_tokens_used": 7749,
+    "vocab_utilization": 0.946
+  }
+}
