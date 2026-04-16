@@ -5,54 +5,132 @@
 
 static inline void hex_dump_int8_line(char * pref, const int8_t * x, int n) {
     char str[1024], *p = str, *p_end = str + sizeof(str);
-    p += snprintf(p, p_end - p, "%s: ", pref);
+    int written = snprintf(p, (size_t)(p_end - p), "%s: ", pref);
+    if (written < 0 || (size_t) written >= (size_t) (p_end - p)) {
+        p = p_end - 1;
+        *p = '\0';
+    } else {
+        p += written;
+    }
     for (int i = 0; i < n && p < p_end; i++) {
-        p += snprintf(p, p_end - p, "%d, ", x[i]);
+        size_t rem = (size_t) (p_end - p);
+        written = snprintf(p, rem, "%d, ", x[i]);
+        if (written < 0 || (size_t) written >= rem) {
+            p = p_end - 1;
+            *p = '\0';
+            break;
+        }
+        p += written;
     }
     FARF(HIGH, "%s\n", str);
 }
 
 static inline void hex_dump_uint8_line(char * pref, const uint8_t * x, uint32_t n) {
     char str[1024], *p = str, *p_end = str + sizeof(str);
-    p += snprintf(p, p_end - p, "%s: ", pref);
+    int written = snprintf(p, (size_t)(p_end - p), "%s: ", pref);
+    if (written < 0 || (size_t) written >= (size_t) (p_end - p)) {
+        p = p_end - 1;
+        *p = '\0';
+    } else {
+        p += written;
+    }
     for (int i = 0; i < n && p < p_end; i++) {
-        p += snprintf(p, p_end - p, "%d, ", x[i]);
+        size_t rem = (size_t) (p_end - p);
+        written = snprintf(p, rem, "%d, ", x[i]);
+        if (written < 0 || (size_t) written >= rem) {
+            p = p_end - 1;
+            *p = '\0';
+            break;
+        }
+        p += written;
     }
     FARF(HIGH, "%s\n", str);
 }
 
 static inline void hex_dump_uint32_line(char * pref, const uint32_t * x, uint32_t n) {
     char str[1024], *p = str, *p_end = str + sizeof(str);
-    p += snprintf(p, p_end - p, "%s: ", pref);
-    for (int i = 0; i < n; i++) {
-        p += snprintf(p, p_end - p, "%u, ", (unsigned int) x[i]);
+    int written = snprintf(p, (size_t)(p_end - p), "%s: ", pref);
+    if (written < 0 || (size_t) written >= (size_t) (p_end - p)) {
+        p = p_end - 1;
+        *p = '\0';
+    } else {
+        p += written;
+    }
+    for (int i = 0; i < n && p < p_end; i++) {
+        size_t rem = (size_t) (p_end - p);
+        written = snprintf(p, rem, "%u, ", (unsigned int) x[i]);
+        if (written < 0 || (size_t) written >= rem) {
+            p = p_end - 1;
+            *p = '\0';
+            break;
+        }
+        p += written;
     }
     FARF(HIGH, "%s\n", str);
 }
 
 static inline void hex_dump_int32_line(char * pref, const int32_t * x, uint32_t n) {
     char str[1024], *p = str, *p_end = str + sizeof(str);
-    p += snprintf(p, p_end - p, "%s: ", pref);
-    for (int i = 0; i < n; i++) {
-        p += snprintf(p, p_end - p, "%d, ", (int) x[i]);
+    int written = snprintf(p, (size_t)(p_end - p), "%s: ", pref);
+    if (written < 0 || (size_t) written >= (size_t) (p_end - p)) {
+        p = p_end - 1;
+        *p = '\0';
+    } else {
+        p += written;
+    }
+    for (int i = 0; i < n && p < p_end; i++) {
+        size_t rem = (size_t) (p_end - p);
+        written = snprintf(p, rem, "%d, ", (int) x[i]);
+        if (written < 0 || (size_t) written >= rem) {
+            p = p_end - 1;
+            *p = '\0';
+            break;
+        }
+        p += written;
     }
     FARF(HIGH, "%s\n", str);
 }
 
 static inline void hex_dump_f16_line(char * pref, const __fp16 * x, uint32_t n) {
     char str[1024], *p = str, *p_end = str + sizeof(str);
-    p += snprintf(p, p_end - p, "%s: ", pref);
-    for (int i = 0; i < n; i++) {
-        p += snprintf(p, p_end - p, "%.6f, ", (float) x[i]);
+    int written = snprintf(p, (size_t)(p_end - p), "%s: ", pref);
+    if (written < 0 || (size_t) written >= (size_t) (p_end - p)) {
+        p = p_end - 1;
+        *p = '\0';
+    } else {
+        p += written;
+    }
+    for (int i = 0; i < n && p < p_end; i++) {
+        size_t rem = (size_t) (p_end - p);
+        written = snprintf(p, rem, "%.6f, ", (float) x[i]);
+        if (written < 0 || (size_t) written >= rem) {
+            p = p_end - 1;
+            *p = '\0';
+            break;
+        }
+        p += written;
     }
     FARF(HIGH, "%s\n", str);
 }
 
 static inline void hex_dump_f32_line(char * pref, const float * x, uint32_t n) {
     char str[1024], *p = str, *p_end = str + sizeof(str);
-    p += snprintf(p, p_end - p, "%s: ", pref);
-    for (int i = 0; i < n; i++) {
-        p += snprintf(p, p_end - p, "%.6f, ", x[i]);
+    int written = snprintf(p, (size_t)(p_end - p), "%s: ", pref);
+    if (written < 0 || (size_t) written >= (size_t) (p_end - p)) {
+        p = p_end - 1;
+        *p = '\0';
+    } else {
+        p += written;
+    }
+    for (int i = 0; i < n && p < p_end; i++) {
+        size_t rem = (size_t) (p_end - p);
+        written = snprintf(p, rem, "%.6f, ", x[i]);
+        if (written < 0 || (size_t) written >= rem) {
+            p = p_end - 1;
+            *p = '\0';
+            break;
+        }
+        p += written;
     }
     FARF(HIGH, "%s\n", str);
 }
