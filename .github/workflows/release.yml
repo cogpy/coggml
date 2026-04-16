@@ -43,7 +43,7 @@ jobs:
       with:
         files: artifacts/*
         tag_name: ${{ github.ref_name }}
-        release_name: ${{ github.ref }}
+        name: ${{ github.ref_name }}
         draft: false
         prerelease: false
       env:
