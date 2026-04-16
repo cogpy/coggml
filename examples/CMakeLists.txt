@@ -35,6 +35,3 @@ if (GGML_METAL)
     add_subdirectory(perf-metal)
 endif()
 
-# CogPy examples
-add_subdirectory(cogpy)
-add_subdirectory(opencog)
