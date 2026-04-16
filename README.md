@@ -1,8 +1,12 @@
-# CogPy Header-Only C++11 Library Suite
+# CogGML
+
+CogPy cognitive architecture modules + [ggml](https://github.com/ggml-org/ggml) tensor library.
+
+## CogPy Header-Only C++11 Library Suite
 
 A unified, header-only C++11 library implementing all CogPy cognitive architecture modules with **zero external dependencies**.
 
-## Modules
+### Modules
 
 | Module | Namespace | Description |
 |--------|-----------|-------------|
@@ -16,12 +20,12 @@ A unified, header-only C++11 library implementing all CogPy cognitive architectu
 | **prime** | `cog::prime` | AGI architecture — cognitive cycle, PLN, pattern matching, memory systems |
 | **webvm** | `cog::webvm` | Web AtomSpace VM — S-expression parser, Scheme REPL, JSON serialization |
 | **fowler** | `cog::fowler` | Thomas Fowler's 1840 balanced ternary calculating machine — BalancedTernary arithmetic, FowlerMachine simulation |
-| **tq** | `cog::tq` | Log₂(3) ternary quantization — 5 trits/byte packing, BlockTQ, TernaryMLP, entropy analysis |
+| **tq** | `cog::tq` | Log2(3) ternary quantization — 5 trits/byte packing, BlockTQ, TernaryMLP, entropy analysis |
 | **dte** | `cog::dte` | Dense MLP autoencoder — DTE identity backup/restore, AAR vector serialization, online SGD |
 | **npu** | `cog::npu` | Tree-Polytope NPU — HarmonicKernel, MatulaDecoder, SkillmISA, SimplexGeometry |
 | **inference** | `cog::inference` | Unified multi-model DTE inference engine — 4-model Echobeats pipeline, DualPoolReservoir, AutognosisCycle |
 
-## Quick Start
+### Quick Start
 
 ```cpp
 #include <cog/cog.hpp>  // Everything
@@ -39,15 +43,52 @@ int main() {
 g++ -std=c++11 -I include -o myapp myapp.cpp
 ```
 
+## ggml — Tensor Library for Machine Learning
+
+[Manifesto](https://github.com/ggerganov/llama.cpp/discussions/205)
+
+***Note that this project is under active development. \
+Some of the development is currently happening in the [llama.cpp](https://github.com/ggerganov/llama.cpp) and [whisper.cpp](https://github.com/ggerganov/whisper.cpp) repos***
+
+### Features
+
+- Low-level cross-platform implementation
+- Integer quantization support
+- Broad hardware support
+- Automatic differentiation
+- ADAM and L-BFGS optimizers
+- No third-party dependencies
+- Zero memory allocations during runtime
+
 ## Build & Test
 
 ```bash
-# Direct
-g++ -std=c++11 -I include -o test_all test/test_all.cpp && ./test_all
+# Build everything (ggml + CogPy)
+mkdir build && cd build
+cmake ..
+cmake --build . --config Release -j 8
 
-# CMake
-mkdir build && cd build && cmake .. && make && ctest
+# Run CogPy tests
+ctest
+
+# Or build CogPy headers-only test directly
+g++ -std=c++11 -I include -o test_all test/test_all.cpp && ./test_all
 ```
+
+## GPT inference (example)
+
+```bash
+# run the GPT-2 small 117M model
+../examples/gpt-2/download-ggml-model.sh 117M
+./bin/gpt-2-backend -m models/gpt-2-117M/ggml-model.bin -p "This is an example"
+```
+
+For more information, checkout the corresponding programs in the [examples](examples) folder.
+
+## Resources
+
+- [Introduction to ggml](https://huggingface.co/blog/introduction-to-ggml)
+- [The GGUF file format](https://github.com/ggerganov/ggml/blob/master/docs/gguf.md)
 
 ## License
 

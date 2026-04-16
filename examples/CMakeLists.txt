@@ -20,6 +20,7 @@ target_include_directories(common-ggml PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(yolo)
 add_subdirectory(opencog)
+add_subdirectory(cogpy)
 
 if (NOT GGML_BACKEND_DL)
     add_subdirectory(gpt-2)
