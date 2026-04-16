@@ -222,15 +222,9 @@ if (GGML_SCHED_NO_REALLOC)
 endif()
 
 add_library(ggml
-<<<<<<< HEAD
+            ggml-backend-dl.cpp
             ggml-backend-reg.cpp
             ggml-opencog.cpp)
-||||||| c538174d
-            ggml-backend-reg.cpp)
-=======
-            ggml-backend-dl.cpp
-            ggml-backend-reg.cpp)
->>>>>>> pr-2
 add_library(ggml::ggml ALIAS ggml)
 
 set_target_properties(ggml PROPERTIES
